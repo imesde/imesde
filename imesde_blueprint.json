@@ -1,0 +1,84 @@
+{
+  "project_name": "Imesde",
+  "project_alias": "Imesde.rs",
+  "category": "IMESD (In-Memory Streaming Database)",
+  "tagline": "The lightning-fast ephemeral vector engine for real-time AI context.",
+  "definition": {
+    "acronym": "I-ME-S-DE",
+    "meaning": "In-Memory Streaming Data Engine",
+    "philosophy": "Data that flows, context that lives in RAM, zero-disk dependency."
+  },
+  "core_philosophy": {
+    "speed": "Sub-millisecond latency via Rust, SIMD, and in-memory circular buffers.",
+    "ephemerality": "Zero-disk persistence. Designed for data that has a high refresh rate and short shelf-life.",
+    "privacy": "Local-first execution. Embeddings and data never leave the host machine.",
+    "simplicity": "Single-binary CLI tool that follows the Unix philosophy (pipe-friendly)."
+  },
+  "technical_specifications": {
+    "language": "Rust",
+    "data_structure": "Sharded Circular Vector Buffer (Ring Buffer)",
+    "search_algorithm": "SIMD-accelerated exhaustive linear scan (K-Nearest Neighbors)",
+    "embedding_strategy": "In-process vectorization via ONNX Runtime (e.g., BGE-Micro)",
+    "concurrency": "Lock-free or sharded RwLock for high-throughput ingestion",
+    "target_performance": "10,000+ vector ingestions per second on standard CPU"
+  },
+  "problems_solved": [
+    "Contextual lag: traditional vector DBs are too slow to update for real-time streams.",
+    "Cost of persistence: no need to pay for storage for logs or data that expires in minutes.",
+    "Privacy: eliminates the need to send real-time streams to third-party vector cloud providers.",
+    "Complexity: replaces heavy database infrastructure with a lightweight streaming engine."
+  ],
+  "roadmap": {
+    "phase_1_foundation": {
+      "focus": "The Core Engine",
+      "tech_tasks": [
+        "Initialize Rust workspace and core data structures",
+        "Implement thread-safe Circular Buffer for f32 vectors",
+        "Build basic Brute-Force similarity search"
+      ],
+      "marketing_checkpoints": [
+        "Create GitHub Organization (imesde-project)",
+        "Publish 'The Imesde Manifesto' README",
+        "Post announcement on X/LinkedIn: Introducing the IMESD category"
+      ]
+    },
+    "phase_2_deep_brain": {
+      "focus": "Local Intelligence",
+      "tech_tasks": [
+        "Integrate 'ort' (ONNX Runtime) for local embedding generation",
+        "Implement text-to-vector ingestion pipeline",
+        "Add metadata support for vector tagging"
+      ],
+      "marketing_checkpoints": [
+        "Record Asciinema terminal demo showing real-time ingestion",
+        "Submit 'Show HN' on Hacker News"
+      ]
+    },
+    "phase_3_warp_speed": {
+      "focus": "Hardware Optimization",
+      "tech_tasks": [
+        "Implement SIMD (AVX2/AVX-512/NEON) for search kernels",
+        "Parallelize search across CPU cores using Rayon",
+        "Create lightweight HTTP/gRPC API layer"
+      ],
+      "marketing_checkpoints": [
+        "Publish 'The Speed of Light' benchmark post (Imesde vs. Redis/Pinecone)",
+        "Engage with Rust and AI communities on Reddit (r/rust, r/LocalLLaMA)"
+      ]
+    },
+    "phase_4_ecosystem": {
+      "focus": "Adoption & Tooling",
+      "tech_tasks": [
+        "Release official Python bindings (PyO3)",
+        "Build a Docker log-collector plugin for Imesde",
+        "Create 'Chat-with-Stream' CLI tool integration"
+      ],
+      "marketing_checkpoints": [
+        "Launch on Product Hunt",
+        "GitHub Trending campaign",
+        "Case study: 'Real-time Security Monitoring with Imesde'"
+      ]
+    }
+  },
+  "cli_vision_example": "tail -f access.log | imesde ingest --dim 384 | imesde query 'Find anomalies in the last 5 minutes'"
+}
