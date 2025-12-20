@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let embedder = Arc::new(TextEmbedder::new(model_path, tokenizer_path));
-    println!("🚀 Imesde Engine & AI Ready.");
+    println!("🚀 Imesde Engine & AI Ready (Detected Dimension: {}).", embedder.dim);
 
     // 3. Real-time Ingestion Pipeline (STDIN)
     // Checking if we have piped input (e.g., cat logs.txt | imesde)
@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             buffer.insert(record);
             count += 1;
             
-            if count % 10 == 0 {
+            if count % 1 == 0 {
                 println!("✨ Ingested {} records...", count);
             }
         }

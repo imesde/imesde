@@ -7,6 +7,7 @@ use std::sync::Mutex;
 pub struct TextEmbedder {
     session: Mutex<Session>,
     tokenizer: Tokenizer,
+    pub dim: usize,
 }
 
 impl TextEmbedder {
@@ -18,10 +19,17 @@ impl TextEmbedder {
 
         let tokenizer = Tokenizer::from_file(tokenizer_path).unwrap();
 
-        Self { 
+        let mut embedder = Self { 
             session: Mutex::new(session), 
-            tokenizer 
-        }
+            tokenizer,
+            dim: 0,
+        };
+
+        // Perform a dry run to auto-detect dimension
+        let dummy_vec = embedder.embed("test");
+        embedder.dim = dummy_vec.len();
+
+        embedder
     }
 
     pub fn embed(&self, text: &str) -> Vec<f32> {
@@ -41,7 +49,6 @@ impl TextEmbedder {
         let attention_mask_val = Value::from_array(attention_mask_array).unwrap();
         let token_type_ids_val = Value::from_array(token_type_ids_array).unwrap();
 
-        // Lock required for Session::run in this ort version
         let mut session_lock = self.session.lock().expect("Failed to lock session");
         let outputs = session_lock.run(ort::inputs![
             "input_ids" => input_ids_val,
@@ -55,11 +62,9 @@ impl TextEmbedder {
         let dims: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
         let view = ArrayViewD::from_shape(IxDyn(&dims), data).unwrap();
         
-        // 1. Mean pooling
         let pooled = view.mean_axis(Axis(1)).unwrap();
         let mut vector: Vec<f32> = pooled.iter().cloned().collect();
 
-        // 2. L2 Normalization
         let norm: f32 = vector.iter().map(|x| x * x).sum::<f32>().sqrt();
         if norm > f32::EPSILON {
             for x in vector.iter_mut() {
