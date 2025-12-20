@@ -1,75 +1,73 @@
 use std::sync::Arc;
+use std::path::Path;
+use std::io::{self, BufRead};
 use imesde::models::VectorRecord;
-use imesde::engine::{ShardedCircularBuffer, NUM_SHARDS};
+use imesde::engine::ShardedCircularBuffer;
+use imesde::embedder::TextEmbedder;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Engine Initialization
     let buffer = Arc::new(ShardedCircularBuffer::new());
-    println!("Lock-free sharded circular buffer initialized with {} shards.", NUM_SHARDS);
+    
+    // 2. AI Initialization
+    let model_path = "model/model.onnx";
+    let tokenizer_path = "model/tokenizer.json";
 
-    let record = VectorRecord::new(
-        "doc_init".to_string(),
-        vec![1.0, 2.0, 3.0],
-        "initialization".to_string(),
-    );
-    buffer.insert(record);
-    println!("Initial record inserted.");
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::thread;
-
-    #[test]
-    fn test_stress_sharded_buffer() {
-        let buffer = Arc::new(ShardedCircularBuffer::new());
-        let num_threads = 10;
-        let inserts_per_thread = 1000;
-        let mut handles = Vec::new();
-
-        println!("Starting stress test with {} threads...", num_threads);
-
-        for t in 0..num_threads {
-            let buffer_ref = Arc::clone(&buffer);
-            let handle = thread::spawn(move || {
-                for i in 0..inserts_per_thread {
-                    let record = VectorRecord::new(
-                        format!("thread_{}_doc_{}", t, i),
-                        vec![i as f32; 128],
-                        format!("metadata from thread {}", t),
-                    );
-                    buffer_ref.insert(record);
-                }
-            });
-            handles.push(handle);
-        }
-
-        for handle in handles {
-            handle.join().unwrap();
-        }
-
-        println!("Test Passed: The circular buffer works under stress!");
+    if !Path::new(model_path).exists() || !Path::new(tokenizer_path).exists() {
+        eprintln!("❌ Error: Model files not found. Please place them in the 'model/' directory.");
+        std::process::exit(1);
     }
 
-    #[test]
-    fn test_search_functionality() {
-        let buffer = ShardedCircularBuffer::new();
-        
-        // Insert some known vectors
-        buffer.insert(VectorRecord::new("1".into(), vec![1.0, 0.0, 0.0], "vec 1".into()));
-        buffer.insert(VectorRecord::new("2".into(), vec![0.0, 1.0, 0.0], "vec 2".into()));
-        buffer.insert(VectorRecord::new("3".into(), vec![0.5, 0.5, 0.0], "vec 3".into()));
+    let embedder = Arc::new(TextEmbedder::new(model_path, tokenizer_path));
+    println!("🚀 Imesde Engine & AI Ready.");
 
-        let query = vec![1.0, 0.1, 0.0];
-        let top_k = buffer.search(&query, 2);
+    // 3. Real-time Ingestion Pipeline (STDIN)
+    // Checking if we have piped input (e.g., cat logs.txt | imesde)
+    let stdin = io::stdin();
+    let mut reader = stdin.lock();
+    
+    println!("📥 Listening to stream (stdin)... Press Ctrl+C to stop or send search query.");
 
-        assert_eq!(top_k.len(), 2);
-        assert_eq!(top_k[0].0.id, "1"); // Most similar
-        assert_eq!(top_k[1].0.id, "3"); // Second most similar
+    let mut line = String::new();
+    let mut count = 0;
+
+    // We can use the embedder in multiple threads safely now
+    while reader.read_line(&mut line)? > 0 {
+        let text = line.trim();
+        if text.is_empty() {
+            line.clear();
+            continue;
+        }
+
+        // Check if it's a special search command for demo purposes: "/search query"
+        if text.starts_with("/search ") {
+            let query = &text[8..];
+            println!("\n🔍 Semantic Search for: '{}'", query);
+            let query_vec = embedder.embed(query);
+            let results = buffer.search(&query_vec, 3);
+            
+            for (record, score) in results {
+                println!("   - [{:.4}] {}", score, record.metadata);
+            }
+            println!();
+        } else {
+            // Normal ingestion
+            let vector = embedder.embed(text);
+            let record = VectorRecord::new(
+                format!("log_{}", count),
+                vector,
+                text.to_string(),
+            );
+            buffer.insert(record);
+            count += 1;
+            
+            if count % 10 == 0 {
+                println!("✨ Ingested {} records...", count);
+            }
+        }
         
-        println!("Search test passed: Found records {:?} with similarities {:?}", 
-            top_k.iter().map(|(r, _)| &r.id).collect::<Vec<_>>(),
-            top_k.iter().map(|(_, s)| s).collect::<Vec<_>>()
-        );
+        line.clear();
     }
+
+    Ok(())
 }

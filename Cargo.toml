@@ -6,4 +6,7 @@ edition = "2024"
 [dependencies]
 arc-swap = "1.7.1"
 fxhash = "0.2.1"
+ndarray = "0.16.1"
+ort = "2.0.0-rc.9"
 rayon = "1.11.0"
+tokenizers = "0.22.2"
