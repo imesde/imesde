@@ -36,21 +36,22 @@ Pipe your server logs into **imesde**. Perform periodic searches for "security b
 
 ## 🏎 Performance (Benchmark Results)
 
-### 📥 Ingestion Throughput (1,000 records)
-| Method | Time (s) | Improvement |
-| :--- | :--- | :--- |
-| **Single Ingest** | 16.29 s | - |
-| **Batch Ingest (Parallel)** | **10.60 s** | **+53.7%** |
+**System**: MacBook Air M4, 16GB RAM
+**Model**: `bge-small-en-v1.5` (int8 quantized)
 
-### 🔍 Search Latency (1,000 queries)
-| Metric | Latency (μs) |
+### 📥 Ingestion (5,000 records)
+| Method | Time |
 | :--- | :--- |
-| **Average** | 18,872.74 μs |
-| **Minimum** | 17,598.92 μs |
-| **P99 (Worst)** | 21,330.84 μs |
-| **Maximum** | 54,969.25 μs |
+| **Batch Ingestion** | **3.79 s** |
 
-*Benchmarks executed on 1,000 records with a sharded circular buffer and ONNX in-process inference.*
+### 🔍 Latency Breakdown
+| Component | Latency | Speed |
+| :--- | :--- | :--- |
+| **AI Embedding (ONNX)** | **1.93 ms** | - |
+| **Engine Search (Rust)** | **233 μs** | **4,297 ops/sec** |
+| **End-to-End QPS** | - | **662 q/s** (4 threads) |
+
+*Benchmarks executed on 5,000 records using [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main).*
 
 ## 🛠 Technical DNA
 

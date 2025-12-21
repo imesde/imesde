@@ -23,42 +23,48 @@ impl PyImesde {
         })
     }
 
-    fn ingest(&self, text: &str) -> PyResult<()> {
-        let vector = self.embedder.embed(text);
-        let id = self.counter.fetch_add(1, Ordering::SeqCst);
-        let record = VectorRecord::new(
-            format!("log_{}", id),
-            vector,
-            text.to_string(),
-        );
-        self.buffer.insert(record);
-        Ok(())
-    }
-
-    fn ingest_batch(&self, texts: Vec<String>) -> PyResult<()> {
-        use rayon::prelude::*;
-        let chunk_size = 128; // Larger chunks to better utilize each session's internal threads
-        texts.par_chunks(chunk_size).for_each(|chunk| {
-            let chunk_vec: Vec<String> = chunk.to_vec();
-            let vectors = self.embedder.embed_batch(chunk_vec);
-            
-            for (i, vector) in vectors.into_iter().enumerate() {
-                let id = self.counter.fetch_add(1, Ordering::SeqCst);
-                let text = &chunk[i];
-                let record = VectorRecord::new(
-                    format!("log_{}", id),
-                    vector,
-                    text.clone(),
-                );
-                self.buffer.insert(record);
-            }
+    fn ingest(&self, py: Python<'_>, text: String) -> PyResult<()> {
+        py.allow_threads(|| {
+            let vector = self.embedder.embed(&text);
+            let id = self.counter.fetch_add(1, Ordering::SeqCst);
+            let record = VectorRecord::new(
+                format!("log_{}", id),
+                vector,
+                text,
+            );
+            self.buffer.insert(record);
         });
         Ok(())
     }
 
-    fn search(&self, query: &str, k: usize) -> PyResult<Vec<(String, f32)>> {
-        let query_vec = self.embedder.embed(query);
-        let results = self.buffer.search(&query_vec, k);
+    fn ingest_batch(&self, py: Python<'_>, texts: Vec<String>) -> PyResult<()> {
+        py.allow_threads(|| {
+            use rayon::prelude::*;
+            let chunk_size = 128; // Larger chunks to better utilize each session's internal threads
+            texts.par_chunks(chunk_size).for_each(|chunk| {
+                let chunk_vec: Vec<String> = chunk.to_vec();
+                let vectors = self.embedder.embed_batch(chunk_vec);
+                
+                for (i, vector) in vectors.into_iter().enumerate() {
+                    let id = self.counter.fetch_add(1, Ordering::SeqCst);
+                    let text = &chunk[i];
+                    let record = VectorRecord::new(
+                        format!("log_{}", id),
+                        vector,
+                        text.clone(),
+                    );
+                    self.buffer.insert(record);
+                }
+            });
+        });
+        Ok(())
+    }
+
+    fn search(&self, py: Python<'_>, query: String, k: usize) -> PyResult<Vec<(String, f32)>> {
+        let results = py.allow_threads(|| {
+            let query_vec = self.embedder.embed(&query);
+            self.buffer.search(&query_vec, k)
+        });
         
         let py_results = results.into_iter()
             .map(|(record, score)| (record.metadata.clone(), score))
@@ -67,8 +73,11 @@ impl PyImesde {
         Ok(py_results)
     }
 
-    fn embed_query(&self, text: &str) -> PyResult<Vec<f32>> {
-        Ok(self.embedder.embed(text))
+    fn embed_query(&self, py: Python<'_>, text: String) -> PyResult<Vec<f32>> {
+        let vector = py.allow_threads(|| {
+            self.embedder.embed(&text)
+        });
+        Ok(vector)
     }
 
     fn search_raw(&self, query_vector: Vec<f32>, k: usize) -> PyResult<Vec<(String, f32)>> {
