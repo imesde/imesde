@@ -53,9 +53,27 @@ for text, score in results:
 
 ## 🛠 Model Preparation
 
-`imesde` is model-agnostic, but the files must be provided locally. You can download optimized models (like `bge-small-en-v1.5`) from Hugging Face.
+`imesde` is model-agnostic, but the files must be provided locally. 
 
-The required files in the `model/` directory are:
+> **General Recommendation**: For the best balance of speed and efficiency on CPUs, we generally recommend using **Int8 quantized** models. If absolute semantic accuracy is more important than latency, you can use standard **Float32** models.
+
+### Recommended Models
+
+
+
+| Model | Format | Best For |
+
+| :--- | :--- | :--- |
+
+| [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main) | ONNX (Int8) | **Production.** Ultra-low latency on CPUs. |
+
+| [all-MiniLM-L6-v2 int8](https://huggingface.co/Xenova/all-MiniLM-L6-v2/tree/main) | ONNX (Int8) | **General Purpose.** Versatile and lightweight. |
+
+
+
+You can download optimized models from Hugging Face.
+
+ The required files in the `model/` directory are:
 - `model.onnx`: The model weights.
 - `tokenizer.json`: The file for text tokenization.
 

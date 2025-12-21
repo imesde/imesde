@@ -51,6 +51,15 @@ Traditional vector databases are built for persistence and long-term storage. im
 |Avg Embedding Time|1.93 ms|
 |Total QPS|662 queries/sec|
 
+### 🏆 Recommended Models
+
+| Model | Format | Best For |
+| :--- | :--- | :--- |
+| [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main) | ONNX (Int8) | **Maximum Speed.** Best balance for real-time CPU streams. |
+| [all-MiniLM-L6-v2 int8](https://huggingface.co/Xenova/all-MiniLM-L6-v2/tree/main) | ONNX (Int8) | **General Purpose.** Versatile and lightweight. |
+
+> **General Recommendation**: For the best balance of speed and efficiency on CPUs, we generally recommend using **Int8 quantized** models.
+
 ---
 
 ## 🧠 Why CPU-First?
@@ -62,6 +71,7 @@ While GPUs offer high throughput for massive batch training, they introduce **la
 1. **Zero-Latency**: No data transfer between RAM and VRAM.
 2. **Quantization is King**: Modern CPUs with AVX2/NEON/AMX process **Int8 Quantized** models at monstrous speeds.
 3. **Result**: GPU-class inference for streaming data with significantly lower operational complexity.
+
 
 > **Need higher precision?** If absolute semantic accuracy > latency, you can simply drop in a standard Float32 model (e.g., `bge-large`, `e5-mistral`). imesde works with any ONNX model out of the box.
 
