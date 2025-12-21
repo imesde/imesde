@@ -1,17 +1,15 @@
-pub fn cosine_similarity(v1: &[f32], v2: &[f32]) -> f32 {
+pub fn dot_product(v1: &[f32], v2: &[f32]) -> f32 {
     if v1.len() != v2.len() || v1.is_empty() {
         return 0.0;
     }
 
-    let dot_product: f32 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
-    let norm_v1: f32 = v1.iter().map(|a| a * a).sum::<f32>().sqrt();
-    let norm_v2: f32 = v2.iter().map(|b| b * b).sum::<f32>().sqrt();
+    v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum()
+}
 
-    if norm_v1 == 0.0 || norm_v2 == 0.0 {
-        return 0.0;
-    }
-
-    dot_product / (norm_v1 * norm_v2)
+// Since our vectors are already normalized in the embedder, 
+// cosine similarity is just the dot product.
+pub fn cosine_similarity(v1: &[f32], v2: &[f32]) -> f32 {
+    dot_product(v1, v2)
 }
 
 #[cfg(test)]

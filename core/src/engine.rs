@@ -50,28 +50,71 @@ impl ShardedCircularBuffer {
     pub fn search(&self, query_vector: &[f32], k: usize) -> Vec<(Arc<VectorRecord>, f32)> {
         use crate::search::cosine_similarity;
         use rayon::prelude::*;
+        use std::collections::BinaryHeap;
+        use std::cmp::Ordering;
 
-        // TODO: Performance improvements for search:
-        // 1. Use a Top-K Heap (Binary Heap) per thread instead of collecting and sorting everything.
-        //    This reduces complexity from O(N log N) to O(N log K).
-        // 2. Ensure SIMD (AVX2/AVX-512/NEON) is fully utilized for cosine_similarity calculations.
-        // 3. Switch to a contiguous memory layout (e.g., a single large ndarray/buffer for vectors)
-        //    to improve CPU cache locality and avoid pointer chasing (Arc/ArcSwap).
-        let mut results: Vec<(Arc<VectorRecord>, f32)> = self.shards
+        #[derive(Clone)]
+        struct SearchResult {
+            record: Arc<VectorRecord>,
+            score: f32,
+        }
+
+        impl PartialEq for SearchResult {
+            fn eq(&self, other: &Self) -> bool {
+                self.score == other.score
+            }
+        }
+
+        impl Eq for SearchResult {}
+
+        impl PartialOrd for SearchResult {
+            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                // Min-heap behavior for scores (to keep the largest K)
+                other.score.partial_cmp(&self.score)
+            }
+        }
+
+        impl Ord for SearchResult {
+            fn cmp(&self, other: &Self) -> Ordering {
+                self.partial_cmp(other).unwrap_or(Ordering::Equal)
+            }
+        }
+
+        let heaps: Vec<BinaryHeap<SearchResult>> = self.shards
             .par_iter()
-            .flat_map(|shard| {
-                shard.buffer.par_iter().filter_map(|slot| {
-                    slot.load_full().map(|record| {
-                        let similarity = cosine_similarity(query_vector, &record.vector);
-                        (record, similarity)
-                    })
-                })
+            .map(|shard| {
+                let mut heap = BinaryHeap::with_capacity(k + 1);
+                for slot in &shard.buffer {
+                    if let Some(record) = slot.load_full() {
+                        let score = cosine_similarity(query_vector, &record.vector);
+                        heap.push(SearchResult { record, score });
+                        if heap.len() > k {
+                            heap.pop();
+                        }
+                    }
+                }
+                heap
             })
             .collect();
 
-        results.par_sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        // Merge heaps from all shards
+        let mut final_heap = BinaryHeap::with_capacity(k + 1);
+        for heap in heaps {
+            for result in heap {
+                final_heap.push(result);
+                if final_heap.len() > k {
+                    final_heap.pop();
+                }
+            }
+        }
 
-        results.into_iter().take(k).collect()
+        let mut results: Vec<_> = final_heap.into_iter()
+            .map(|res| (res.record, res.score))
+            .collect();
+
+        // Sort results descending by score for the final output
+        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
+        results
     }
 
     fn get_shard_index(&self, id: &str) -> usize {
