@@ -8,6 +8,16 @@
         "meaning": "In-Memory Streaming Data Engine",
         "philosophy": "Data that flows, context that lives in RAM, zero-disk dependency."
     },
+    "chat_context_evolution": {
+        "hardware_profile": "Optimized for Apple Silicon M4 (Unified Memory architecture).",
+        "performance_milestones": "Achieved <400μs P99 search latency on 5k records with int8 quantization.",
+        "technical_pivots": [
+            "Adopted bge-small-en-v1.5 int8 as reference model for extreme CPU efficiency.",
+            "Established CPU-First philosophy to eliminate PCIe bus latency 'tax'.",
+            "Resolved OpenSSL-sys compilation errors for CI/CD pipelines via libssl-dev/vendored features."
+        ],
+        "application_focus": "Transitioned towards high-frequency stream monitoring (Wikipedia Firehose, Financial Bot)."
+    },
     "core_philosophy": {
         "speed": "Sub-millisecond latency via Rust, SIMD, and in-memory circular buffers.",
         "ephemerality": "Zero-disk persistence. Designed for data that has a high refresh rate and short shelf-life.",

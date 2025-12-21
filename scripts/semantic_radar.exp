@@ -1,0 +1,27 @@
+#!/usr/bin/expect -f
+#asciinema rec semantic_radar.cast -c ./scripts/semantic_radar.exp
+
+set timeout 300
+spawn python3 bindings/python/examples/semantic_radar.py
+
+expect "🚀 IMESDE Semantic Radar Started..."
+sleep 1
+
+expect "Fetching global aircraft states..."
+sleep 2
+
+expect "📊 PERFORMANCE LOG:"
+sleep 1
+
+expect {
+    "🔥 Found" {
+        expect "🤖 ANALYSIS:"
+        sleep 5
+    }
+    "✅ Airspace Scan:" {
+        sleep 2
+    }
+}
+
+send \003
+expect eof

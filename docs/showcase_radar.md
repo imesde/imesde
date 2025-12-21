@@ -1,6 +1,10 @@
 # 🛰️ Showcase: Semantic Radar & Stress Test
 
-This example demonstrates how to use **imesde** to monitor a global live stream of data (OpenSky Network) and perform real-time semantic analysis to detect aviation anomalies.
+![Semantic Radar Demo](../assets/semantic_radar.gif)
+
+🛰️ **Semantic Radar Demo**: This example demonstrates how to use **imesde** to monitor a global live stream of data from the OpenSky Network and perform real-time semantic analysis to detect aviation anomalies. 
+
+In this demo, imesde processes **~10,000 flight status updates per minute** via the OpenSky API. The system performs local vector embedding and semantic search to identify flight anomalies in **less than 1ms per record**, all running entirely on the CPU.
 
 ## 🧠 Key Concept: Semantic Mapping
 
