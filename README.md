@@ -13,58 +13,61 @@ Welcome to **imesde**, the **In-Memory Streaming Data Engine**. We are defining 
 Traditional vector databases are built for persistence and long-term storage. imesde is built for **speed and ephemerality**:
 
 - **Zero-Disk Dependency**: Pure RAM operation. Old data flows out as new data flows in. No GC, no fragmentation. Optimized with **SIMD-accelerated** dot product kernels for maximum CPU efficiency.
+
 - **Lock-Free Architecture**: High-throughput ingestion and search using atomic operations and sharded buffers.
+
 - **Local-First Privacy**: In-process vectorization (ONNX) and storage. Data never leaves your machine.
+
 - **Unix Philosophy**: Designed to be pipe-friendly. `tail -f logs | imesde`.
-
-## 💡 Use Cases (The Power of Ephemeral Context)
-
-**imesde** is designed for scenarios where you need to process high-speed streams and perform semantic analysis on the "now" without the overhead of a database cluster.
-
-### 1. Semantic Market Monitoring
-Monitor financial news feeds (RSS, Bloomberg, Twitter) for complex semantic triggers. Instead of keyword matching (which misses context), use **imesde** to detect "inflationary pressure" or "supply chain disruption" across thousands of headlines in real-time.
-*See: `bindings/python/examples/market_monitor.py`*
-
-### 2. Live Firehose Filtering (Wikipedia/Social Media)
-Connect to a massive event stream (like the Wikipedia Recent Changes firehose) and perform live semantic filtering. Detect specific topics (e.g., "international diplomacy", "tech breakthroughs") as they happen, using the circular buffer to keep only the most recent context.
-*See: `bindings/python/examples/wikipedia_event_stream.py`*
-
-### 3. Log Anomaly Detection
-Pipe your server logs into **imesde**. Perform periodic searches for "security breach attempts" or "unusual database failures". The circular buffer ensures you always have a sliding window of the last 16k logs available for semantic query, automatically discarding the old ones.
 
 ---
 
-## 🏎 Performance (Benchmark Results)
+### Use Cases
 
-**System**: MacBook Air M4, 16GB RAM
-**Model**: `bge-small-en-v1.5` (int8 quantized)
-
-### 📥 Ingestion (5,000 records)
-| Method | Time |
-| :--- | :--- |
-| **Batch Ingestion** | **3.79 s** |
-
-### 🔍 Latency Breakdown
-| Component | Latency | Speed |
+| Use Case | imesde | Traditional Vector DB |
 | :--- | :--- | :--- |
-| **AI Embedding (ONNX)** | **1.93 ms** | - |
-| **Engine Search (Rust)** | **233 μs** | **4,297 ops/sec** |
-| **End-to-End QPS** | - | **662 q/s** (4 threads) |
+| **Live Firehose (Logs/Tweets)** | ✅ **Best** (Circular Buffer) | ❌ Slow (Disk/Indexing lag) |
+| **Search 10M PDF Documents** | ❌ No (RAM limited) | ✅ **Best** (Disk/HNSW) |
+| **Privacy-First / Edge** | ✅ **Best** (Zero-deps) | ❌ Hard (Heavy services) |
 
-*Benchmarks executed on 5,000 records using [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main).*
+---
 
-## 🛠 Technical DNA
+## 🚀 imesde Performance Benchmark
 
-- **Language**: Rust
-- **Engine**: Sharded Lock-Free Circular Buffer
-- **Inference**: In-process ONNX Runtime
-- **Target**: 10,000+ ingestions/sec on standard hardware
+💻 **System**: Darwin 24.6.0 (arm64) - 16GB RAM  
+📊 **Dataset**: 5000 records  
+🧠 **Model**: [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main)
 
-## 🧩 Architecture
+------------------------------------------------------------
 
-imesde isn't a traditional database. It's a high-speed pipeline:
+### 🚀 Data Ingestion Latency
+⏱️ **Time**: 3.79 s
 
-`[Stream Input] -> [Parallel ONNX Embedding] -> [Sharded Circular Buffer] -> [Top-K SIMD Search]`
+### 🧠 AI Embedding Latency (CPU/ONNX)
+⏱️ **Avg Embedding**: 1928.21 μs (1.93 ms)
+
+### ⚡ Engine Search Latency (Vector Search)
+⏱️ **Avg Search**: 232.74 μs  
+⏱️ **P99 Search**: 383.75 μs  
+🚀 **Engine OPS**: 4297 queries/sec
+
+### 🌐 Concurrent End-to-End Search
+⚡ **Total QPS**: 662 queries/sec
+
+---
+
+## 🧠 Why CPU-First?
+
+imesde is intentionally architected to run on **CPUs**, not GPUs.
+While GPUs offer high throughput for massive batch training, they introduce **latency** (PCIe data transfer) and complexity (drivers, VRAM management) that contradict the goal of a lightweight, real-time streaming engine.
+
+**The Strategy:**
+1.  **Zero-Latency**: By staying on the CPU, we eliminate the overhead of moving data between RAM and VRAM.
+2.  **Quantization is King**: Modern CPUs with AVX2/NEON/AMX instructions process **Int8 Quantized** models at monstrous speeds.
+
+*Result*: We achieve GPU-class inference throughput for streaming data with significantly lower latency and operational simplicity.
+
+> **Need higher precision?** If absolute semantic accuracy > latency, you can simply drop in a standard Float32 model (e.g., `bge-large`, `e5-mistral`). imesde works with any ONNX model out of the box.
 
 ---
 
