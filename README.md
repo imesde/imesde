@@ -20,6 +20,8 @@ Traditional vector databases are built for persistence and long-term storage. im
 
 - **Lock-Free Architecture**: High-throughput ingestion and search using sharded buffers.
 
+- **Real-Time RAG Engine**: Enables the [**"Infinite Window"**](docs/rag_engine.md). Feed LLMs with live context (logs, tickers, chats) with zero indexing latency and automatic "forgetting" of stale data.
+
 - **Local-First Privacy**: In-process vectorization (ONNX) and storage. Data never leaves your machine.
 
 ---
@@ -29,6 +31,7 @@ Traditional vector databases are built for persistence and long-term storage. im
 | Use Case | imesde | Traditional Vector DB |
 | :--- | :--- | :--- |
 | **Live Firehose (Logs/Tweets)** | ✅ **Best** (Circular Buffer) | ❌ Slow (Disk/Indexing lag) |
+| **Real-Time RAG (Live Context)** | ✅ **Best** (Zero lag) | ❌ Hard (Stale data/Indexing) |
 | **Search 10M PDF Documents** | ❌ No (RAM limited) | ✅ **Best** (Disk/HNSW) |
 | **Privacy-First / Edge** | ✅ **Best** (Zero-deps) | ❌ Hard (Heavy services) |
 | **Infrastructure Cost** | 💎 **Minimal (Single binary)** | 💸 High (Cloud/Cluster) |
