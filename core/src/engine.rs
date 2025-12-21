@@ -69,7 +69,6 @@ impl ShardedCircularBuffer {
 
         impl PartialOrd for SearchResult {
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                // Min-heap behavior for scores (to keep the largest K)
                 other.score.partial_cmp(&self.score)
             }
         }
@@ -97,7 +96,6 @@ impl ShardedCircularBuffer {
             })
             .collect();
 
-        // Merge heaps from all shards
         let mut final_heap = BinaryHeap::with_capacity(k + 1);
         for heap in heaps {
             for result in heap {
@@ -112,7 +110,6 @@ impl ShardedCircularBuffer {
             .map(|res| (res.record, res.score))
             .collect();
 
-        // Sort results descending by score for the final output
         results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
         results
     }
