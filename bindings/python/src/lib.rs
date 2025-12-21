@@ -37,15 +37,21 @@ impl PyImesde {
 
     fn ingest_batch(&self, texts: Vec<String>) -> PyResult<()> {
         use rayon::prelude::*;
-        texts.into_par_iter().for_each(|text| {
-            let vector = self.embedder.embed(&text);
-            let id = self.counter.fetch_add(1, Ordering::SeqCst);
-            let record = VectorRecord::new(
-                format!("log_{}", id),
-                vector,
-                text,
-            );
-            self.buffer.insert(record);
+        let chunk_size = 32;
+        texts.par_chunks(chunk_size).for_each(|chunk| {
+            let chunk_vec: Vec<String> = chunk.to_vec();
+            let vectors = self.embedder.embed_batch(chunk_vec);
+            
+            for (i, vector) in vectors.into_iter().enumerate() {
+                let id = self.counter.fetch_add(1, Ordering::SeqCst);
+                let text = &chunk[i];
+                let record = VectorRecord::new(
+                    format!("log_{}", id),
+                    vector,
+                    text.clone(),
+                );
+                self.buffer.insert(record);
+            }
         });
         Ok(())
     }
