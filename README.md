@@ -17,12 +17,23 @@ Traditional vector databases are built for persistence and long-term storage. im
 - **Local-First Privacy**: In-process vectorization (ONNX) and storage. Data never leaves your machine.
 - **Unix Philosophy**: Designed to be pipe-friendly. `tail -f logs | imesde`.
 
-## 🏎 Performance
+## 🏎 Performance (Benchmark Results)
 
-- **Sub-millisecond Latency**: Parallelized exhaustive search via **Rayon**.
-- **SIMD Optimized**: Vectorized math kernels for maximum CPU throughput.
-- **Sharded Buffer**: 16-shard circular architecture to minimize contention.
-- **Zero-Allocation**: In-place sorting and result collection.
+### 📥 Ingestion Throughput (1,000 records)
+| Method | Time (s) | Improvement |
+| :--- | :--- | :--- |
+| **Single Ingest** | 16.29 s | - |
+| **Batch Ingest (Parallel)** | **10.60 s** | **+53.7%** |
+
+### 🔍 Search Latency (1,000 queries)
+| Metric | Latency (μs) |
+| :--- | :--- |
+| **Average** | 18,872.74 μs |
+| **Minimum** | 17,598.92 μs |
+| **P99 (Worst)** | 21,330.84 μs |
+| **Maximum** | 54,969.25 μs |
+
+*Benchmarks executed on 1,000 records with a sharded circular buffer and ONNX in-process inference.*
 
 ## 🛠 Technical DNA
 
