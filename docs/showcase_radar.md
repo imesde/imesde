@@ -12,18 +12,62 @@ Instead of searching for a value like `altitude < 1000`, we feed the engine desc
 
 The embedding model understands the **intent** behind "danger" or "emergency" better than a simple database query.
 
+```python
+# Mapping telemetry to concepts
+alt_tag = "extreme altitude" if alt > 11000 else "low altitude" if alt < 1000 else "standard flight level"
+vel_tag = "supersonic/high speed" if vel > 280 else "slow speed" if vel < 100 else "normal cruise speed"
+status_tag = "EMERGENCY code detected" if squawk in ["7700", "7600", "7500"] else "routine flight"
+
+# The final semantic string stored in imesde
+rich_report = f"Flight {callsign}. Status: {status_tag}. {alt_tag} at {alt}m. Speed: {vel_tag}."
+```
+
 ## 🚀 Performance at Scale
 
 In this showcase, we ingest the entire global airspace (typically **10,000+ aircraft states**) in a single batch.
 
-### What this tests:
-1. **Batch Ingestion Throughput**: How many vectors/sec `imesde` can process on your CPU.
-2. **Parallel Sharding**: We initialize the engine with `num_shards=32` to maximize CPU utilization during mass ingestion.
-3. **Low Latency Search**: Finding the top-K anomalies across the entire global buffer in milliseconds.
+### Parallel Sharding
+We initialize the engine with high sharding to maximize throughput:
+```python
+db = imesde.PyImesde(
+    "model/model.onnx", 
+    "model/tokenizer.json", 
+    num_shards=32,   # Parallelize across 32 shards
+    shard_size=2048  # Total capacity: 65,536 vectors
+)
+```
 
-## 🤖 AI Reasoning & Example Output
+### High-Speed Ingestion & Search
+The main loop demonstrates how to handle thousands of records per second:
 
-The system uses **Ollama** (specifically the `phi3` model) to analyze only the most relevant matches. Below is an example of the schematic analysis generated when the radar detects an anomaly:
+```python
+# 1. Mass Ingestion (Stress Test)
+# ingest_batch() uses Rayon internally for parallel embedding and insertion
+db.ingest_batch(reports)
+
+# 2. Semantic Query
+# We search for the 'concept' of danger
+search_query = "dangerous high speed at very low altitude or emergency squawk"
+results = db.search(search_query, k=5)
+
+# 3. Filtering by similarity score
+matches = [r for r in results if r[1] > 0.60]
+```
+
+## 🤖 AI Reasoning & Integration
+
+The system uses **Ollama** as a local reasoning engine. We only trigger the LLM when `imesde` detects a high-confidence semantic match, creating a "Semantic Trigger" architecture:
+
+```python
+def autonomous_alert(flight_data, total_matches):
+    # This is called only if imesde score > 0.60
+    prompt = f"Analyze these anomalies: {flight_data}. Evaluate safety and summarize."
+    
+    response = ollama.generate(model="phi3", prompt=prompt)
+    print(f"🤖 ANALYSIS: {response['response']}")
+```
+
+This approach is significantly more efficient than feeding every raw event to an LLM, as `imesde` acts as a high-speed semantic filter.
 
 ### Example Analysis Output (Flight CXK168)
 > **[AI] Reasoning on top match...**
@@ -51,6 +95,10 @@ To see the Semantic Radar in action, follow these steps:
    ```bash
    python bindings/python/examples/semantic_radar.py
    ```
+
+### 🚀 View Full Showcase
+To see the complete, runnable implementation including the API fetching and performance logging, check out the source file:
+👉 **[bindings/python/examples/semantic_radar.py](../bindings/python/examples/semantic_radar.py)**
 
 ---
 *Back to [Python Usage](python_usage.md) or [Real-Time RAG](rag_engine.md).*
