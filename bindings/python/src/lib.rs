@@ -36,9 +36,8 @@ impl PyImesde {
     }
 
     fn ingest_batch(&self, texts: Vec<String>) -> PyResult<()> {
-        use rayon::prelude::*;
-        let chunk_size = 32;
-        texts.par_chunks(chunk_size).for_each(|chunk| {
+        let chunk_size = 256; // Larger chunks for better ONNX utilization
+        for chunk in texts.chunks(chunk_size) {
             let chunk_vec: Vec<String> = chunk.to_vec();
             let vectors = self.embedder.embed_batch(chunk_vec);
             
@@ -52,7 +51,7 @@ impl PyImesde {
                 );
                 self.buffer.insert(record);
             }
-        });
+        }
         Ok(())
     }
 
