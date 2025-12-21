@@ -67,9 +67,7 @@
         "phase_4_ecosystem": {
             "focus": "Adoption & Tooling",
             "tech_tasks": [
-                "Release official Python bindings (PyO3)",
-                "Build a Docker log-collector plugin for imesde",
-                "Create 'Chat-with-Stream' CLI tool integration"
+                "Release official Python bindings (PyO3)"
             ],
             "marketing_checkpoints": [
                 "Launch on Product Hunt",
@@ -81,7 +79,9 @@
             "focus": "Performance Optimization",
             "tech_tasks": [
                 "Implement SIMD (AVX2/AVX-512/NEON) for search kernels",
-                "Create lightweight HTTP/gRPC API layer"
+                "Create lightweight HTTP/gRPC API layer",
+                "Build a Docker log-collector plugin for imesde",
+                "Create 'Chat-with-Stream' CLI tool integration"
             ],
             "marketing_checkpoints": [
                 ""

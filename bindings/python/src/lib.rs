@@ -35,6 +35,21 @@ impl PyImesde {
         Ok(())
     }
 
+    fn ingest_batch(&self, texts: Vec<String>) -> PyResult<()> {
+        use rayon::prelude::*;
+        texts.into_par_iter().for_each(|text| {
+            let vector = self.embedder.embed(&text);
+            let id = self.counter.fetch_add(1, Ordering::SeqCst);
+            let record = VectorRecord::new(
+                format!("log_{}", id),
+                vector,
+                text,
+            );
+            self.buffer.insert(record);
+        });
+        Ok(())
+    }
+
     fn search(&self, query: &str, k: usize) -> PyResult<Vec<(String, f32)>> {
         let query_vec = self.embedder.embed(query);
         let results = self.buffer.search(&query_vec, k);

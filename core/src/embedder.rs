@@ -5,6 +5,10 @@ use ndarray::{Array2, Axis, ArrayViewD, IxDyn};
 use std::sync::Mutex;
 
 pub struct TextEmbedder {
+    // TODO: To improve performance and eliminate the Mutex:
+    // 1. Implement tensor batching: accept multiple texts and create a single input tensor with padding.
+    //    ONNX Runtime is highly optimized for batch inference.
+    // 2. Alternatively, use a Session Pool to allow multiple concurrent inferences if RAM permits.
     session: Mutex<Session>,
     tokenizer: Tokenizer,
     pub dim: usize,
