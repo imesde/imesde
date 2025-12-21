@@ -1,0 +1,20 @@
+[package]
+name = "imesde"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "imesde"
+path = "src/lib.rs"
+
+[[bin]]
+name = "imesde"
+path = "src/main.rs"
+
+[dependencies]
+arc-swap = "1.7.1"
+fxhash = "0.2.1"
+ndarray = "0.16.1"
+ort = "2.0.0-rc.9"
+rayon = "1.11.0"
+tokenizers = "0.22.2"
