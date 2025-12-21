@@ -92,6 +92,10 @@ For a detailed guide on using imesde with Python, see the [Python Documentation]
 ### 📖 Documentation & Use Cases
 - [**Real-Time RAG (The Infinite Window)**](docs/rag_engine.md): How to use imesde for live context retrieval.
 - [**AI & LLM Integration**](docs/ai_integration.md): Examples with **Ollama** and **OpenAI**.
+- [**🛰️ Showcase: Semantic Radar**](docs/showcase_radar.md): A full-scale stress test monitoring global aviation data with AI reasoning.
+  ```bash
+  python bindings/python/examples/semantic_radar.py
+  ```
 
 You can install **imesde** directly via pip:
 
