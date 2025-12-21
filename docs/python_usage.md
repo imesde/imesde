@@ -59,14 +59,9 @@ for text, score in results:
 
 ### Recommended Models
 
-
-
 | Model | Format | Best For |
-
 | :--- | :--- | :--- |
-
 | [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main) | ONNX (Int8) | **Production.** Ultra-low latency on CPUs. |
-
 | [all-MiniLM-L6-v2 int8](https://huggingface.co/Xenova/all-MiniLM-L6-v2/tree/main) | ONNX (Int8) | **General Purpose.** Versatile and lightweight. |
 
 
