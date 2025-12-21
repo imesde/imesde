@@ -35,8 +35,36 @@ Traditional vector databases are built for persistence and long-term storage. im
 
 ## 🚀 Quick Start
 ```bash
-cargo run --release
+# Build Rust binary
+cargo build --release
 ```
+
+## 🐍 Python Usage
+You can install **imesde** as a Python module:
+
+```bash
+cd bindings/python
+maturin build --release
+pip install ../../target/wheels/imesde-*.whl
+```
+
+### Example
+```python
+from imesde import PyImesde
+
+# Initialize with model paths
+engine = PyImesde("model/model.onnx", "model/tokenizer.json")
+
+# Ingest data
+engine.ingest("Real-time log data flow")
+
+# Search
+results = engine.search("data flow", k=5)
+for text, score in results:
+    print(f"[{score:.4f}] {text}")
+```
+
+---
 *Note: Requires `model.onnx` and `tokenizer.json` in the `model/` directory.*
 
 ---
