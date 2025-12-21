@@ -51,6 +51,12 @@ impl ShardedCircularBuffer {
         use crate::search::cosine_similarity;
         use rayon::prelude::*;
 
+        // TODO: Performance improvements for search:
+        // 1. Use a Top-K Heap (Binary Heap) per thread instead of collecting and sorting everything.
+        //    This reduces complexity from O(N log N) to O(N log K).
+        // 2. Ensure SIMD (AVX2/AVX-512/NEON) is fully utilized for cosine_similarity calculations.
+        // 3. Switch to a contiguous memory layout (e.g., a single large ndarray/buffer for vectors)
+        //    to improve CPU cache locality and avoid pointer chasing (Arc/ArcSwap).
         let mut results: Vec<(Arc<VectorRecord>, f32)> = self.shards
             .par_iter()
             .flat_map(|shard| {
