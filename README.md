@@ -74,12 +74,12 @@ cargo build --release
 ```
 
 ## 🐍 Python Usage
-You can install **imesde** as a Python module:
+For a detailed guide on using imesde with Python, see the [Python Documentation](docs/python_usage.md).
+
+You can install **imesde** directly via pip:
 
 ```bash
-cd bindings/python
-maturin build --release
-pip install ../../target/wheels/imesde-*.whl
+pip install imesde
 ```
 
 ### Example
