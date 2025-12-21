@@ -22,8 +22,6 @@ Traditional vector databases are built for persistence and long-term storage. im
 
 - **Local-First Privacy**: In-process vectorization (ONNX) and storage. Data never leaves your machine.
 
-- **Unix Philosophy**: Designed to be pipe-friendly. `tail -f logs | imesde`.
-
 ---
 
 ### Use Cases
