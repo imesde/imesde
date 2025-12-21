@@ -8,7 +8,7 @@
 
 ![Imesde Demo](assets/demo.gif)
 
-Welcome to **imesde**, the **In-Memory Streaming Data Engine**. We are defining a new category in the data landscape: the **IMESD**.
+Welcome to **imesde**, the **In-Memory Streaming Data Engine**. We are defining a new category in the data landscape: the **IMESDE**.
 
 ---
 
