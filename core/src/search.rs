@@ -1,9 +1,19 @@
 pub fn dot_product(v1: &[f32], v2: &[f32]) -> f32 {
-    if v1.len() != v2.len() || v1.is_empty() {
+    let len = v1.len();
+    if len != v2.len() || len == 0 {
         return 0.0;
     }
 
-    v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum()
+    // Manual unrolling/hinting often helps the compiler verify purely safe access
+    // isn't bound-checked inside the hot loop.
+    let mut sum = 0.0;
+    for i in 0..len {
+        // SAFETY: We checked lengths are equal.
+        // Using get_unchecked would be unsafe but faster. 
+        // For now, simple indexing allows auto-vectorization if compiled with -C target-cpu=native
+        sum += v1[i] * v2[i];
+    }
+    sum
 }
 
 // Since our vectors are already normalized in the embedder, 

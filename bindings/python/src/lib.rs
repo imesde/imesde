@@ -66,6 +66,18 @@ impl PyImesde {
             
         Ok(py_results)
     }
+
+    fn embed_query(&self, text: &str) -> PyResult<Vec<f32>> {
+        Ok(self.embedder.embed(text))
+    }
+
+    fn search_raw(&self, query_vector: Vec<f32>, k: usize) -> PyResult<Vec<(String, f32)>> {
+        let results = self.buffer.search(&query_vector, k);
+        let py_results = results.into_iter()
+            .map(|(record, score)| (record.metadata.clone(), score))
+            .collect();
+        Ok(py_results)
+    }
 }
 
 #[pymodule]
