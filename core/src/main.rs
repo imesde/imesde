@@ -6,12 +6,12 @@ use std::fs::File;
 use std::thread;
 
 use imesde::models::VectorRecord;
-use imesde::engine::ShardedCircularBuffer;
+use imesde::engine::{ShardedCircularBuffer, DEFAULT_NUM_SHARDS, DEFAULT_SHARD_SIZE};
 use imesde::embedder::TextEmbedder;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Core Initialization
-    let buffer = Arc::new(ShardedCircularBuffer::new());
+    let buffer = Arc::new(ShardedCircularBuffer::new(DEFAULT_NUM_SHARDS, DEFAULT_SHARD_SIZE));
     let log_count = Arc::new(AtomicUsize::new(0));
 
     // 2. AI Initialization

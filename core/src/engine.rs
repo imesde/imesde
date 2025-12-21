@@ -3,12 +3,13 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use crate::models::VectorRecord;
 
-pub const NUM_SHARDS: usize = 16;
-pub const SHARD_SIZE: usize = 1024;
+pub const DEFAULT_NUM_SHARDS: usize = 16;
+pub const DEFAULT_SHARD_SIZE: usize = 1024;
 
 pub struct Shard {
     buffer: Vec<ArcSwapOption<VectorRecord>>,
     index: AtomicUsize,
+    size: usize,
 }
 
 impl Shard {
@@ -20,26 +21,28 @@ impl Shard {
         Self {
             buffer,
             index: AtomicUsize::new(0),
+            size,
         }
     }
 
     fn insert(&self, record: Arc<VectorRecord>) {
-        let pos = self.index.fetch_add(1, Ordering::SeqCst) % SHARD_SIZE;
+        let pos = self.index.fetch_add(1, Ordering::SeqCst) % self.size;
         self.buffer[pos].store(Some(record));
     }
 }
 
 pub struct ShardedCircularBuffer {
     shards: Vec<Shard>,
+    num_shards: usize,
 }
 
 impl ShardedCircularBuffer {
-    pub fn new() -> Self {
-        let mut shards = Vec::with_capacity(NUM_SHARDS);
-        for _ in 0..NUM_SHARDS {
-            shards.push(Shard::new(SHARD_SIZE));
+    pub fn new(num_shards: usize, shard_size: usize) -> Self {
+        let mut shards = Vec::with_capacity(num_shards);
+        for _ in 0..num_shards {
+            shards.push(Shard::new(shard_size));
         }
-        Self { shards }
+        Self { shards, num_shards }
     }
 
     pub fn insert(&self, record: VectorRecord) {
@@ -154,6 +157,6 @@ impl ShardedCircularBuffer {
         use std::hash::{Hash, Hasher};
         let mut hasher = fxhash::FxHasher::default();
         id.hash(&mut hasher);
-        (hasher.finish() as usize) % NUM_SHARDS
+        (hasher.finish() as usize) % self.num_shards
     }
 }

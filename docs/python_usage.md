@@ -15,14 +15,24 @@ pip install imesde
 Using `imesde` involves three main phases: initialization, data ingestion, and searching.
 
 ### 1. Initialization
-`imesde` requires an embedding model in ONNX format and its corresponding tokenizer.
+To start the engine, you need to provide the paths to your ONNX embedding model and its tokenizer. You can also optionally configure the internal circular buffer size.
 
 ```python
-import imesde
+from imesde import PyImesde
 
-# Initialize the engine
-db = imesde.PyImesde("model/model.onnx", "model/tokenizer.json")
+# Initialize with default settings (16 shards x 1024 = 16,384 vectors)
+engine = PyImesde("model/model.onnx", "model/tokenizer.json")
+
+# Custom buffer size (e.g., 32 shards x 2048 = 65,536 vectors)
+engine = PyImesde(
+    "model/model.onnx", 
+    "model/tokenizer.json", 
+    num_shards=32, 
+    shard_size=2048
+)
 ```
+
+> **Note**: `imesde` uses a sharded circular buffer. Total capacity = `num_shards` * `shard_size`.
 
 ### 2. Data Ingestion
 As a **Circular Buffer**, `imesde` only keeps the most recent data in memory. When the buffer is full, the oldest data is automatically overwritten.

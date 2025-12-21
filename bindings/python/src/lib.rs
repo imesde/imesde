@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use ::imesde::engine::ShardedCircularBuffer;
+use ::imesde::engine::{ShardedCircularBuffer, DEFAULT_NUM_SHARDS, DEFAULT_SHARD_SIZE};
 use ::imesde::embedder::TextEmbedder;
 use ::imesde::models::VectorRecord;
 use std::sync::Arc;
@@ -15,9 +15,17 @@ struct PyImesde {
 #[pymethods]
 impl PyImesde {
     #[new]
-    fn new(model_path: &str, tokenizer_path: &str) -> PyResult<Self> {
+    #[pyo3(signature = (model_path, tokenizer_path, num_shards=None, shard_size=None))]
+    fn new(
+        model_path: &str,
+        tokenizer_path: &str,
+        num_shards: Option<usize>,
+        shard_size: Option<usize>,
+    ) -> PyResult<Self> {
+        let ns = num_shards.unwrap_or(DEFAULT_NUM_SHARDS);
+        let ss = shard_size.unwrap_or(DEFAULT_SHARD_SIZE);
         Ok(Self {
-            buffer: Arc::new(ShardedCircularBuffer::new()),
+            buffer: Arc::new(ShardedCircularBuffer::new(ns, ss)),
             embedder: Arc::new(TextEmbedder::new(model_path, tokenizer_path)),
             counter: Arc::new(AtomicUsize::new(0)),
         })
