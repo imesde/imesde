@@ -4,3 +4,9 @@ members = [
     "bindings/python",
 ]
 resolver = "2"
+
+[workspace.metadata.release]
+publish = false
+tag-name = "v{{version}}"
+pre-release-commit-message = "chore: release v{{version}}"
+

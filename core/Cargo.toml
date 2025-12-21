@@ -19,4 +19,4 @@ ort = "2.0.0-rc.10"
 crossbeam-queue = "0.3.12"
 num_cpus = "1.16.0"
 rayon = "1.11.0"
-tokenizers = "0.22.2"
+tokenizers = { version = "0.22.2", default-features = false, features = ["onig"] }

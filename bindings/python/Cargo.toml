@@ -3,11 +3,19 @@ name = "imesde-python"
 version = "0.1.0"
 edition = "2024"
 
+[package.metadata.release]
+publish = false
+
+[[package.metadata.release.pre-release-replacements]]
+file = "pyproject.toml"
+search = "version = \"[a-z0-9\\.-]+\""
+replace = "version = \"{{version}}\""
+
 [lib]
 name = "imesde"
 crate-type = ["cdylib"]
 
 [dependencies]
-imesde = { path = "../../core" }
+imesde = { path = "../../core", default-features = false }
 pyo3 = { version = "0.23.3", features = ["extension-module", "abi3-py310"] }
 rayon = "1.11.0"
