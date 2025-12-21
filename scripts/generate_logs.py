@@ -1,6 +1,7 @@
 import time
 import random
 import sys
+import argparse
 
 templates = [
     "INFO: User {user} logged in from {ip}",
@@ -15,7 +16,7 @@ templates = [
 users = ["admin", "guest", "root", "dev_user"]
 services = ["auth_db", "api_gateway", "worker_pool"]
 
-def generate():
+def generate(delay):
     try:
         while True:
             t = random.choice(templates).format(
@@ -28,9 +29,12 @@ def generate():
                 file=random.randint(100, 999)
             )
             print(t, flush=True)
-            time.sleep(0.1) # Un log ogni 100ms
+            time.sleep(delay)
     except KeyboardInterrupt:
         pass
 
 if __name__ == "__main__":
-    generate()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--delay", type=float, default=0.001, help="Delay between logs in seconds")
+    args = parser.parse_args()
+    generate(args.delay)

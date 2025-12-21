@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+#asciinema rec demo.cast -c ./scripts/demo.exp
+
+set timeout -1
+log_user 1
+
+proc human_type {text} {
+    foreach char [split $text ""] {
+        send $char
+        # Force visual echo
+        send_user $char
+        set delay [expr {int(rand() * 100) + 50}]
+        after $delay
+    }
+    after 300
+    send "\r"
+    send_user "\n"
+}
+
+spawn bash -c "python3 scripts/generate_logs.py --delay 0.0005 | ./target/release/imesde"
+
+expect "imesde> "
+after 2000
+
+human_type "/status"
+expect "imesde> "
+after 1500
+
+human_type "/search critical sql issues"
+expect "imesde> "
+after 2500
+human_type "/search security threats"
+expect "imesde> "
+after 2500
+
+human_type "/status"
+expect "imesde> "
+after 1000
+human_type "/exit"
+expect eof

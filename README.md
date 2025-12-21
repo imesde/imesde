@@ -1,3 +1,7 @@
+![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)
+![Python](https://img.shields.io/badge/Python-14354C?style=flat&logo=python&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 # ⚡️ imesde
 
 > **"Semantic search at the speed of a pipe. No disk, no lag, just context."**
