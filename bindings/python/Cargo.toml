@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-name = "imesde_python"
+name = "imesde"
 crate-type = ["cdylib"]
 
 [dependencies]
 imesde = { path = "../../core" }
-pyo3 = { version = "0.23.3", features = ["extension-module"] }
+pyo3 = { version = "0.23.3", features = ["abi3-py310"] }
