@@ -1,5 +1,7 @@
 # ⚡️ imesde
 
+![Imesde Demo](assets/demo.gif)
+
 > **"Data that flows, context that lives in RAM, zero-disk dependency."**
 
 Welcome to **imesde**, the **In-Memory Streaming Data Engine**. We are defining a new category in the data landscape: the **IMESD**.
