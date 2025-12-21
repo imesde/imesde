@@ -83,6 +83,8 @@ impl ShardedCircularBuffer {
             .par_iter()
             .map(|shard| {
                 let mut heap = BinaryHeap::with_capacity(k + 1);
+                // We use sequential iteration inside the shard as it's only 1024 items,
+                // but since we have 16 shards, we already use 16 threads.
                 for slot in &shard.buffer {
                     if let Some(record) = slot.load_full() {
                         let score = cosine_similarity(query_vector, &record.vector);
