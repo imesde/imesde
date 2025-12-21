@@ -58,6 +58,8 @@ Traditional vector databases are built for persistence and long-term storage. im
 | :--- | :--- | :--- |
 | [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main) | ONNX (Int8) | **Maximum Speed.** Best balance for real-time CPU streams. |
 | [all-MiniLM-L6-v2 int8](https://huggingface.co/Xenova/all-MiniLM-L6-v2/tree/main) | ONNX (Int8) | **General Purpose.** Versatile and lightweight. |
+| [bge-base-en-v1.5 int8](https://huggingface.co/Xenova/bge-base-en-v1.5/tree/main) | ONNX (Int8) | **High Accuracy.** Better retrieval quality, moderate CPU load. |
+| [bge-large-en-v1.5 int8](https://huggingface.co/Xenova/bge-large-en-v1.5/tree/main) | ONNX (Int8) | **Maximum Precision.** SOTA retrieval, highest latency. |
 
 > **General Recommendation**: For the best balance of speed and efficiency on CPUs, we generally recommend using **Int8 quantized** models.
 
@@ -86,6 +88,10 @@ cargo build --release
 
 ## 🐍 Python Usage
 For a detailed guide on using imesde with Python, see the [Python Documentation](docs/python_usage.md).
+
+### 📖 Documentation & Use Cases
+- [**Real-Time RAG (The Infinite Window)**](docs/rag_engine.md): How to use imesde for live context retrieval.
+- [**AI & LLM Integration**](docs/ai_integration.md): Examples with **Ollama** and **OpenAI**.
 
 You can install **imesde** directly via pip:
 
