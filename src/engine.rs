@@ -54,21 +54,17 @@ impl ShardedCircularBuffer {
         let mut results: Vec<(Arc<VectorRecord>, f32)> = self.shards
             .par_iter()
             .flat_map(|shard| {
-                let mut shard_results = Vec::new();
-                for slot in &shard.buffer {
-                    if let Some(record) = slot.load_full() {
+                shard.buffer.par_iter().filter_map(|slot| {
+                    slot.load_full().map(|record| {
                         let similarity = cosine_similarity(query_vector, &record.vector);
-                        shard_results.push((record, similarity));
-                    }
-                }
-                shard_results
+                        (record, similarity)
+                    })
+                })
             })
             .collect();
 
-        // Sort by similarity descending
-        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        results.par_sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Take top K
         results.into_iter().take(k).collect()
     }
 
