@@ -57,20 +57,23 @@ Traditional vector databases are built for persistence and long-term storage. im
 
 A pure engine-to-engine comparison (excluding AI embedding time) between **imesde** and **Qdrant (In-Memory mode)**. This benchmark measures the raw speed of the underlying Rust search kernels.
 
-**Test Setup:** 5,000 records, 384 dimensions, Apple M4 (Darwin 24.6.0).  
+**Test Setup:** 20,000 records, 384 dimensions, Apple M4 (Darwin 24.6.0).  
 **Source Code:** [`benchmark_vs_qdrant.py`](bindings/python/examples/benchmark_vs_qdrant.py)
 
 | Engine | Ingestion Time | Avg Search Latency | Speed |
 | :--- | :--- | :--- | :--- |
-| **Qdrant** (In-Memory) | 0.5066 s | 1864.45 μs | 1x |
-| **imesde** (Rust Engine) | **0.0132 s** | **222.50 μs** | **8.4x Faster** |
+| **Qdrant** (In-Memory) | 2.0567 s | 11.28 ms | 1x |
+| **imesde** (Rust Engine) | **0.0608 s** | **1.28 ms** | **8.8x Faster** |
 
-#### Which one should I use?
+#### ⚖️ When to use which?
 
-| Data Scale | Recommended Engine | Why? |
+| Feature | **imesde** | **Qdrant / Pinecone** |
 | :--- | :--- | :--- |
-| **100 - 100,000** records | **imesde** | **Superior speed.** At this scale, a linear SIMD scan is faster than navigating HNSW graphs, with zero indexing overhead. |
-| **1,000,000+** records | **Qdrant** | **Better scaling.** For millions of vectors, Qdrant's HNSW index skips enough comparisons to beat a full linear scan. |
+| **Best for...** | **Live Streaming / Short-Term Memory** | **Knowledge Base / Long-Term Storage** |
+| **Data Scale** | < 500,000 records (Linear Scan) | > 1,000,000 records (HNSW Index) |
+| **Ingestion** | **Instant** (Append-only) | Slower (Index overhead) |
+| **Persistence** | Ephemeral (RAM only) | Persistent (Disk/Cloud) |
+| **Architecture** | Single Binary (Lightweight) | Service/Cluster (Heavy) |
 
 ### 🏆 Recommended Models
 

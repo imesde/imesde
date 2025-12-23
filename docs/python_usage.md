@@ -176,5 +176,14 @@ vector = [0.1, 0.2, 0.3, ...] # Must match model dimension
 db.ingest_raw(vector, "My metadata text")
 ```
 
+### 4. `ingest_batch_raw(vectors: List[List[float]], texts: List[str])`
+High-speed batch ingestion of raw vectors. Bypasses Python loop overhead by processing the entire batch in Rust.
+
+```python
+vectors = [[...], [...], [...]]
+texts = ["text 1", "text 2", "text 3"]
+db.ingest_batch_raw(vectors, texts)
+```
+
 ---
 *For complete examples, see the `bindings/python/examples` folder in the repository.*

@@ -81,6 +81,26 @@ impl PyImesde {
         Ok(())
     }
 
+    fn ingest_batch_raw(&self, py: Python<'_>, vectors: Vec<Vec<f32>>, texts: Vec<String>) -> PyResult<()> {
+        if vectors.len() != texts.len() {
+            return Err(pyo3::exceptions::PyValueError::new_err("Vectors and texts must have the same length"));
+        }
+        py.allow_threads(|| {
+            use rayon::prelude::*;
+            // Parallel ingestion directly in Rust binding to avoid Python loop overhead
+            vectors.into_par_iter().zip(texts.into_par_iter()).for_each(|(vector, text)| {
+                let id = self.counter.fetch_add(1, Ordering::SeqCst);
+                let record = VectorRecord::new(
+                    format!("log_{}", id),
+                    vector,
+                    text,
+                );
+                self.buffer.insert(record);
+            });
+        });
+        Ok(())
+    }
+
     fn search(&self, py: Python<'_>, query: String, k: usize) -> PyResult<Vec<(String, f32)>> {
         let results = py.allow_threads(|| {
             let query_vec = self.embedder.embed(&query);

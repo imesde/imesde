@@ -70,10 +70,9 @@ def run_pure_engine_benchmark():
     print(f"\n[3/3] 🟠 Testing imesde (Rust Engine)...")
     db = imesde.PyImesde(MODEL_PATH, TOKENIZER_PATH, num_shards=16, shard_size=1024)
 
-    # Ingestion (Using simple loop to avoid adding bulk logic in Rust)
+    # Ingestion (Using optimized batch raw ingestion)
     start_ingest = time.perf_counter()
-    for v, t in zip(raw_vectors, raw_texts):
-        db.ingest_raw(v, t)
+    db.ingest_batch_raw(raw_vectors, raw_texts)
     end_ingest = time.perf_counter()
     i_ingest_t = end_ingest - start_ingest
 
