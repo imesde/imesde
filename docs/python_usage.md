@@ -54,7 +54,7 @@ engine = PyImesde(
 
 | Architecture | `num_shards` Recommendation | Reasoning |
 | :--- | :--- | :--- |
-| **Apple Silicon** (M1/M2/M3/M4) | **32 shards** | Leverages hybrid architecture; P-cores can "steal" tasks from E-cores via Rayon. |
+| **Apple Silicon** (M1-M4) | **8-16 shards** (Small Data)<br>**32 shards** (High Load) | For small datasets (<10k), lower overhead wins. For high load, 32 shards engage efficiency cores better. |
 | **Standard Desktop** (i7/i9, Ryzen) | **2x logical threads** | Keeps execution pipelines saturated during context switches (Hyper-Threading). |
 | **Cloud Servers** (64+ Cores) | **64 or 128 shards** | Reduces contention during massive ingestion and saturates AVX-512/NEON units. |
 
@@ -66,7 +66,17 @@ engine = PyImesde(
 | **Large Datasets** / High Capacity | **2048 or 4096** | Reduces overhead of merging Top-K results across a high number of shards. |
 | **Standard Streaming** | **1024** | The "gold standard" for balancing performance and memory locality. |
 
-> **General Rule:** Start with **32 shards / 1024 size**. If ingestion is slow, double the shards. If search is slow on small datasets, halve them.
+#### Benchmark Comparison (Apple M4)
+*Fixed Shard Size: 1024*
+
+| Configuration | Engine OPS | Total QPS (Real World) |
+| :--- | :--- | :--- |
+| **8 Shards** | 4,241 | 724 |
+| **16 Shards** | **4,732** | **734 (Optimal)** |
+| **32 Shards** | 4,382 | 714 |
+| **64 Shards** | 3,920 | 662 |
+
+> **General Rule:** Start with **16 shards / 1024 size**. If ingestion is slow, double the shards. If search is slow on small datasets, halve them.
 
 ### 2. Data Ingestion
 As a **Circular Buffer**, `imesde` only keeps the most recent data in memory. When the buffer is full, the oldest data is automatically overwritten.

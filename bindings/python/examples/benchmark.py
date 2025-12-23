@@ -11,6 +11,8 @@ TOKENIZER_PATH = "model/tokenizer.json"
 NUM_RECORDS = 5000     # Increased to 5k to make the search work a bit harder
 SEARCH_ITERATIONS = 5000 # More iterations for stable microsecond measurement
 CONCURRENT_THREADS = 4
+SHARD_SIZE = 1024
+NUM_SHARDS = 32
 
 def get_system_info():
     try:
@@ -22,10 +24,12 @@ def run_benchmark():
     print(f"\n🚀 imesde Performance Benchmark")
     print(f"💻 System:  {get_system_info()}")
     print(f"📊 Dataset: {NUM_RECORDS} records")
+    print(f"📦 {SHARD_SIZE} records per shard")
+    print(f"🗂️ {NUM_SHARDS} shards")
     print("-" * 60)
 
     # 1. Initialization
-    db = imesde.PyImesde(MODEL_PATH, TOKENIZER_PATH)
+    db = imesde.PyImesde(MODEL_PATH, TOKENIZER_PATH, num_shards=NUM_SHARDS, shard_size=SHARD_SIZE)
     texts = [f"Financial market update log entry number {i} regarding inflation." for i in range(NUM_RECORDS)]
 
     # --- TEST 1: BATCH INGESTION ---

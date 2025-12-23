@@ -42,15 +42,16 @@ Traditional vector databases are built for persistence and long-term storage. im
 
 💻 **System**: Apple M4 (Darwin 24.6.0) - 16GB RAM  
 📊 **Dataset**: 5000 records  
+⚙️ **Config**: 16 Shards × 1024 Record Size  
 🧠 **Model**: [bge-small-en-v1.5 int8](https://huggingface.co/Xenova/bge-small-en-v1.5/tree/main)
 
 |Metric	|Result|
 |---|---|
-|Avg Search Latency|232.74 μs|
-|P99 Search Latency|383.75 μs|
-|Engine Throughput|4,297 queries/sec|
-|Avg Embedding Time|1.93 ms|
-|Total QPS|662 queries/sec|
+|Avg Search Latency|211.32 μs|
+|P99 Search Latency|302.50 μs|
+|Engine Throughput|4,732 queries/sec|
+|Avg Embedding Time|1.77 ms|
+|Total QPS|734 queries/sec|
 
 ### 🏆 Recommended Models
 
