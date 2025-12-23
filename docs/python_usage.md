@@ -126,5 +126,37 @@ Use `imesde` to analyze tweets, server logs, or RSS feeds as they flow. Instead 
 ### Context for AI Agents
 Use `imesde` as a short-term memory for your LLM agents, providing only the most relevant context retrieved from the recent data stream.
 
+## 🛠 Advanced / Low-Level API
+
+`imesde` exposes low-level methods to bypass the standard pipeline. These are useful for benchmarking, caching, or scenarios where you already have pre-computed vectors.
+
+### 1. `embed_query(text: str) -> List[float]`
+Generates the vector embedding for a given text without storing it or searching. Use this to measure the AI model latency or to cache vectors externally.
+
+```python
+# Measure how long the AI takes to "understand" a sentence
+import time
+
+start = time.perf_counter()
+vector = db.embed_query("What is the latency of this model?")
+latency_ms = (time.perf_counter() - start) * 1000
+
+print(f"Embedding Latency: {latency_ms:.2f} ms")
+# vector is now a list of floats, e.g., [0.12, -0.05, 0.88, ...]
+```
+
+### 2. `search_raw(query_vector: List[float], k: int) -> List[Tuple[str, float]]`
+Performs a nearest-neighbor search using a raw vector, bypassing the embedding step. This allows for extremely high-frequency searches if the query vector is pre-calculated.
+
+```python
+# 1. Pre-calculate the vector (Expensive operation, done once)
+query_vec = db.embed_query("critical failure")
+
+# 2. Execute high-frequency search (Cheap operation, done repeatedly)
+# This hits the Rust engine directly (sub-millisecond speed)
+for _ in range(1000):
+    results = db.search_raw(query_vec, k=5)
+```
+
 ---
 *For complete examples, see the `bindings/python/examples` folder in the repository.*
