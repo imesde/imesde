@@ -75,6 +75,10 @@ A pure engine-to-engine comparison (excluding AI embedding time) between **imesd
 | **Persistence** | Ephemeral (RAM only) | Persistent (Disk/Cloud) |
 | **Architecture** | Single Binary (Lightweight) | Service/Cluster (Heavy) |
 
+**🚀 Where imesde wins:**
+- **🤖 AI Agent Memory (Short-Term):** Ideal for agents that need to recall "what happened in the last 10 minutes." The dataset is small but highly volatile. `imesde` provides instant speed, whereas a full Vector DB would be an unnecessary waste of resources for such a small volume.
+- **🌊 High-Frequency Streams:** Critical for system logs, financial feeds, or IoT sensors (~10,000 events/sec) requiring real-time anomaly detection. `imesde` ingests and searches without lag, avoiding the performance hit caused by constant re-indexing in traditional DBs.
+
 ### 🏆 Recommended Models
 
 | Model | Format | Best For |
