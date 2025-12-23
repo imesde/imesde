@@ -48,7 +48,7 @@ impl PyImesde {
     fn ingest_batch(&self, py: Python<'_>, texts: Vec<String>) -> PyResult<()> {
         py.allow_threads(|| {
             use rayon::prelude::*;
-            let chunk_size = 128; // Larger chunks to better utilize each session's internal threads
+            let chunk_size = 128;
             texts.par_chunks(chunk_size).for_each(|chunk| {
                 let chunk_vec: Vec<String> = chunk.to_vec();
                 let vectors = self.embedder.embed_batch(chunk_vec);
@@ -64,6 +64,19 @@ impl PyImesde {
                     self.buffer.insert(record);
                 }
             });
+        });
+        Ok(())
+    }
+
+    fn ingest_raw(&self, py: Python<'_>, vector: Vec<f32>, text: String) -> PyResult<()> {
+        py.allow_threads(|| {
+            let id = self.counter.fetch_add(1, Ordering::SeqCst);
+            let record = VectorRecord::new(
+                format!("log_{}", id),
+                vector,
+                text,
+            );
+            self.buffer.insert(record);
         });
         Ok(())
     }

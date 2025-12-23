@@ -168,5 +168,13 @@ for _ in range(1000):
     results = db.search_raw(query_vec, k=5)
 ```
 
+### 3. `ingest_raw(vector: List[float], text: str)`
+Injects a pre-computed vector directly into the buffer. This is useful if you are migrating data from another DB or using an external embedding service.
+
+```python
+vector = [0.1, 0.2, 0.3, ...] # Must match model dimension
+db.ingest_raw(vector, "My metadata text")
+```
+
 ---
 *For complete examples, see the `bindings/python/examples` folder in the repository.*
