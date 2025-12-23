@@ -34,6 +34,45 @@ engine = PyImesde(
 
 > **Note**: `imesde` uses a sharded circular buffer. Total capacity = `num_shards` * `shard_size`.
 
+### 🔧 Advanced Configuration
+
+#### 1. SHARD_SIZE (The Unit of Work)
+**What it is:** The number of elements (slots) contained within a single shard.
+
+**Performance Impact:** This determines the "granularity" of your work. Each shard is processed by a single CPU thread. A smaller size (e.g., 512–1024) ensures that the data fits entirely within the L1/L2 CPU Cache, minimizing slow RAM access. However, if the size is too small, the overhead of managing the thread pool may exceed the time spent on actual calculation.
+
+**When to increase:** Increase this value if your dataset is very large or if your calculation (e.g., cosine_similarity) is extremely fast, requiring larger batches to keep the CPU cores busy.
+
+#### 2. NUM_SHARDS (The Parallelism Factor)
+**What it is:** The total number of independent partitions in the buffer.
+
+**Performance Impact:** This controls how many "tasks" are available for Rayon’s work-stealing scheduler. On asymmetric processors like the Apple M4, having more shards than physical cores (e.g., 32 shards for 8 cores) is beneficial. It allows high-performance cores to "steal" and process more shards while slower efficiency cores are still working on their first ones.
+
+**When to increase:** Increase this to improve load balancing across different types of CPU cores (P-cores vs. E-core) or to reduce contention during concurrent insertions.
+
+#### Selection Strategy by Hardware
+
+- **Apple Silicon (M1/M2/M3/M4):**
+  - *Recommendation:* **32 shards** (High count to leverage mixed P/E cores).
+  - *Reasoning:* The MacOS scheduler moves background tasks to Efficiency cores. A higher shard count ensures Performance cores always have chunks to "steal" and process via Rayon.
+
+- **Standard Desktop (Intel Core i7/i9, AMD Ryzen):**
+  - *Recommendation:* **2x the logical thread count** (e.g., 32 shards for a 16-thread CPU).
+  - *Reasoning:* Modern x86 CPUs with Hyper-Threading benefit from having more tasks than physical cores to keep the execution pipelines saturated during context switches.
+
+- **Cloud Servers (AWS Graviton, AMD EPYC - 64+ Cores):**
+  - *Recommendation:* **64 or 128 shards**.
+  - *Reasoning:* Massive parallelism requires massive partitioning. High shard counts reduce contention during concurrent ingestion and fully utilize AVX-512 or NEON units across many cores.
+
+#### Optimal Shard Size
+
+The `shard_size` determines the depth of each partition.
+- **Small Datasets (< 5,000 records):** Use **512 or 1024**. This prevents the engine from scanning large amounts of "empty" pre-allocated space and keeps the data inside the L1/L2 cache.
+- **Large Datasets / High Capacity:** Use **2048 or 4096**. Larger shards reduce the overhead of merging top-K results from a high number of shards.
+- **Ideal Range:** For most streaming use cases, **1024** is the gold standard for performance.
+
+- **General Rule:** Start with **32 shards / 1024 size**. If ingestion feels slow, double the shards. If search feels slow on small datasets, halve the shards.
+
 ### 2. Data Ingestion
 As a **Circular Buffer**, `imesde` only keeps the most recent data in memory. When the buffer is full, the oldest data is automatically overwritten.
 
