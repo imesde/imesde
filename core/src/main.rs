@@ -10,11 +10,7 @@ use imesde::engine::{ShardedCircularBuffer, DEFAULT_NUM_SHARDS, DEFAULT_SHARD_SI
 use imesde::embedder::TextEmbedder;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Core Initialization
-    let buffer = Arc::new(ShardedCircularBuffer::new(DEFAULT_NUM_SHARDS, DEFAULT_SHARD_SIZE));
-    let log_count = Arc::new(AtomicUsize::new(0));
-
-    // 2. AI Initialization
+    // 1. AI Initialization
     let model_path = "model/model.onnx";
     let tokenizer_path = "model/tokenizer.json";
 
@@ -24,6 +20,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let embedder = Arc::new(TextEmbedder::new(model_path, tokenizer_path));
+    
+    // 2. Core Initialization
+    let buffer = Arc::new(ShardedCircularBuffer::new(DEFAULT_NUM_SHARDS, DEFAULT_SHARD_SIZE, embedder.dim, true));
+    let log_count = Arc::new(AtomicUsize::new(0));
+
     println!("🚀 Imesde Engine & AI Ready (Dim: {}).", embedder.dim);
     println!("📝 Commands: /search <query>, /status, /exit");
     println!("--------------------------------------------------");
