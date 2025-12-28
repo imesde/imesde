@@ -9,6 +9,28 @@ This guide demonstrates how to use **imesde** as a real-time context provider fo
 
 ---
 
+## 🛰️ Autonomous Statistical Triggers
+
+While searching for specific patterns is powerful, `imesde` can also trigger AI reasoning **autonomously** by detecting statistical outliers. This allows you to catch "Zero-Day" events that you haven't written a query for yet.
+
+> **Requirement**: Ensure you initialize the engine with `track_centroid=True` (enabled by default).
+
+```python
+# Instead of searching for a keyword, we find what is "unique" 
+# compared to the current mathematical mean (centroid) of the buffer.
+
+anomalies = db.get_outliers(threshold=0.50)
+
+if anomalies:
+    # Trigger the LLM only when something statistically 'weird' happens
+    suspicious_log, score = anomalies[0]
+    
+    prompt = f"An unusual event was detected (similarity to mean: {score}). Analyze: {suspicious_log}"
+    # ... call LLM ...
+```
+
+---
+
 ## 🏠 Local Integration (with Ollama)
 
 Ideal for **Privacy-First** environments where logs should never leave the server.

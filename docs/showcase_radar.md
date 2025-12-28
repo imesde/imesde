@@ -42,34 +42,18 @@ db = imesde.PyImesde(
 ```
 
 ### High-Speed Ingestion & Search
-The main loop demonstrates how to handle thousands of records per second:
+## 🤖 AI Reasoning & Integration (Tiered Gating)
 
-```python
-# 1. Mass Ingestion (Stress Test)
-# ingest_batch() uses Rayon internally for parallel embedding and insertion
-db.ingest_batch(reports)
+The system uses a **Tiered Alerting** architecture to minimize computational costs. The LLM (Ollama) is only invoked when Rust-based filters detect significant anomalies:
 
-# 2. Semantic Query
-# We search for the 'concept' of danger
-search_query = "dangerous high speed at very low altitude or emergency squawk"
-results = db.search(search_query, k=5)
+| Tier | Method | Trigger | Purpose |
+| :--- | :--- | :--- | :--- |
+| **1. Targeted** | `db.search()` | Score > 0.70 | Immediate danger (Known Red Flags like "Emergency"). |
+| **2. Systemic** | `Drift Analysis` | Similarity < 0.98 | Global pattern shift (Storms, Groundings, Major events). |
+| **3. Statistical**| `db.get_outliers()`| Sim to Mean < 0.45 | Unique anomalies (Unknown "weird" behavior). |
 
-# 3. Filtering by similarity score
-matches = [r for r in results if r[1] > 0.60]
-```
+This approach ensures that **99% of the monitoring happens at the Rust level** (sub-millisecond), reserving the expensive AI reasoning only for confirmed points of interest.
 
-## 🤖 AI Reasoning & Integration
-
-The system uses **Ollama** as a local reasoning engine. We only trigger the LLM when `imesde` detects a high-confidence semantic match, creating a "Semantic Trigger" architecture:
-
-```python
-def autonomous_alert(flight_data, total_matches):
-    # This is called only if imesde score > 0.60
-    prompt = f"Analyze these anomalies: {flight_data}. Evaluate safety and summarize."
-    
-    response = ollama.generate(model="phi3", prompt=prompt)
-    print(f"🤖 ANALYSIS: {response['response']}")
-```
 
 This approach is significantly more efficient than feeding every raw event to an LLM, as `imesde` acts as a high-speed semantic filter.
 

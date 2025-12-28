@@ -12,7 +12,7 @@ NUM_RECORDS = 5000     # Increased to 5k to make the search work a bit harder
 SEARCH_ITERATIONS = 5000 # More iterations for stable microsecond measurement
 CONCURRENT_THREADS = 4
 SHARD_SIZE = 1024
-NUM_SHARDS = 32
+NUM_SHARDS = 16
 
 def get_system_info():
     try:
@@ -32,15 +32,31 @@ def run_benchmark():
     db = imesde.PyImesde(MODEL_PATH, TOKENIZER_PATH, num_shards=NUM_SHARDS, shard_size=SHARD_SIZE)
     texts = [f"Financial market update log entry number {i} regarding inflation." for i in range(NUM_RECORDS)]
 
-    # --- TEST 1: BATCH INGESTION ---
-    print(f"\n[1/4] 🚀 Ingesting Data...")
+    # --- TEST 1: BATCH INGESTION (ENABLED) ---
+    print(f"\n[1/6] 🚀 Ingesting Data (Centroid Tracking: ENABLED)...")
     start_time = time.perf_counter()
     db.ingest_batch(texts)
     end_time = time.perf_counter()
     print(f"   ⏱️  Time:       {end_time - start_time:.2f} s")
+    print(f"   🚀 Throughput: {NUM_RECORDS / (end_time - start_time):.0f} vectors/sec")
 
-    # --- TEST 2: AI LATENCY (Embedding Only) ---
-    print(f"\n[2/4] 🧠 Measuring AI Embedding Latency (CPU/ONNX)...")
+    # --- TEST 2: BATCH INGESTION (DISABLED) ---
+    print(f"\n[2/6] 🚀 Ingesting Data (Centroid Tracking: DISABLED)...")
+    db_fast = imesde.PyImesde(
+        MODEL_PATH, TOKENIZER_PATH, 
+        num_shards=NUM_SHARDS, 
+        shard_size=SHARD_SIZE, 
+        track_centroid=False
+    )
+    start_time = time.perf_counter()
+    db_fast.ingest_batch(texts)
+    end_time = time.perf_counter()
+    print(f"   ⏱️  Time:       {end_time - start_time:.2f} s")
+    print(f"   🚀 Throughput: {NUM_RECORDS / (end_time - start_time):.0f} vectors/sec")
+    print(f"   ℹ️  Use 'track_centroid=False' if you don't need statistical anomaly detection.")
+
+    # --- TEST 3: AI LATENCY (Embedding Only) ---
+    print(f"\n[3/6] 🧠 Measuring AI Embedding Latency (CPU/ONNX)...")
     # Warmup
     _ = db.embed_query("warmup")
     
@@ -56,8 +72,8 @@ def run_benchmark():
     print(f"   ⏱️  Avg Embedding: {avg_embed:.2f} μs ({avg_embed/1000:.2f} ms)")
     print(f"   ℹ️  This is the cost of the Neural Network.")
 
-    # --- TEST 3: ENGINE LATENCY (Pure Search) ---
-    print(f"\n[3/4] ⚡ Measuring Engine Search Latency (Pure Vector Search)...")
+    # --- TEST 4: ENGINE LATENCY (Pure Search) ---
+    print(f"\n[4/6] ⚡ Measuring Engine Search Latency (Pure Vector Search)...")
     # Pre-calculate a vector to skip embedding cost during loop
     query_vec = db.embed_query("inflation analysis")
     
@@ -76,8 +92,33 @@ def run_benchmark():
     print(f"   ⏱️  P99 Search:    {p99_search:.2f} μs")
     print(f"   🚀 Engine OPS:    {1_000_000 / avg_search:.0f} queries/sec")
 
-    # --- TEST 4: END-TO-END CONCURRENCY ---
-    print(f"\n[4/4] 🌐 Testing Concurrent End-to-End Search ({CONCURRENT_THREADS} threads)...")
+    # --- TEST 5: CENTROID & OUTLIERS ---
+    print(f"\n[5/6] 🎯 Measuring Centroid & Outliers Latency...")
+    
+    centroid_latencies = []
+    outlier_latencies = []
+    
+    for _ in range(100):
+        # Centroid
+        t0 = time.perf_counter_ns()
+        _ = db.get_centroid()
+        t1 = time.perf_counter_ns()
+        centroid_latencies.append((t1 - t0) / 1000.0)
+        
+        # Outliers
+        t0 = time.perf_counter_ns()
+        _ = db.get_outliers(0.5)
+        t1 = time.perf_counter_ns()
+        outlier_latencies.append((t1 - t0) / 1000.0)
+    
+    avg_centroid = statistics.mean(centroid_latencies)
+    avg_outliers = statistics.mean(outlier_latencies)
+    
+    print(f"   ⏱️  Avg Centroid:  {avg_centroid:.2f} μs")
+    print(f"   ⏱️  Avg Outliers:  {avg_outliers:.2f} μs")
+
+    # --- TEST 6: END-TO-END CONCURRENCY ---
+    print(f"\n[6/6] 🌐 Testing Concurrent End-to-End Search ({CONCURRENT_THREADS} threads)...")
     
     def search_worker(n):
         for _ in range(n):

@@ -28,11 +28,12 @@ engine = PyImesde(
     "model/model.onnx", 
     "model/tokenizer.json", 
     num_shards=32, 
-    shard_size=2048
+    shard_size=2048,
+    track_centroid=True # Enable O(1) sliding window anomaly detection (Default: True)
 )
 ```
 
-> **Note**: `imesde` uses a sharded circular buffer. Total capacity = `num_shards` * `shard_size`.
+> **Note**: `imesde` uses a sharded circular buffer. Total capacity = `num_shards` * `shard_size`. Set `track_centroid=False` if you don't need statistical anomaly detection and want maximum ingestion speed.
 
 ### 🔧 Advanced Configuration
 
@@ -81,17 +82,21 @@ engine = PyImesde(
 ### 2. Data Ingestion
 As a **Circular Buffer**, `imesde` only keeps the most recent data in memory. When the buffer is full, the oldest data is automatically overwritten.
 
-```python
-# Single ingestion
-db.ingest("New system log detected at 10:30")
+**New**: `ingest` now returns the **Instant Anomaly Score** ($O(1)$) — the cosine similarity of the new record compared to the current global mean *before* the insertion.
 
-# Batch ingestion (Recommended for high performance)
+```python
+# Single ingestion returns a similarity score (0.0 to 1.0)
+score = db.ingest("New system log detected at 10:30")
+if score < 0.50:
+    print(f"⚠️ Instant anomaly detected! Score: {score}")
+
+# Batch ingestion returns a list of scores
 logs = [
     "Database connection error",
     "User 'admin' logged in",
     "Network latency above 200ms"
 ]
-db.ingest_batch(logs)
+scores = db.ingest_batch(logs)
 ```
 
 ### 3. Semantic Search
@@ -103,6 +108,40 @@ results = db.search("network issues", k=3)
 
 for text, score in results:
     print(f"[{score:.4f}] {text}")
+```
+
+## 🧠 Centroid-Based Anomaly Detection
+
+In addition to searching with manual queries, `imesde` can automatically identify statistical outliers based on the "mathematical mean" of the current buffer. This is highly effective for detecting anomalies in streams without knowing what you are looking for.
+
+### 1. `get_centroid() -> List[float]`
+Calculates the average vector of all records currently in the buffer. This represents the "semantic baseline" of your data stream.
+
+```python
+centroid = db.get_centroid()
+# centroid is the average concept of everything currently in RAM.
+```
+
+### 2. `get_outliers(threshold: float) -> List[Tuple[str, float]]`
+Returns all records whose similarity to the mean (centroid) is **lower** than the specified threshold.
+- **Threshold 1.0**: Only identical vectors pass.
+- **Threshold 0.0**: Everything passes.
+- **Typical use**: 0.45 - 0.60 depending on the model and data diversity.
+
+```python
+# Find everything that is "weird" compared to the current global state
+anomalies = db.get_outliers(threshold=0.55)
+
+for text, score in anomalies:
+    print(f"🚨 Statistical Anomaly: {text} (Similarity to mean: {score:.4f})")
+```
+
+### 3. `get_scores_from_centroid() -> List[Tuple[str, float]]`
+Returns the similarity score to the mean for **every** record in the buffer. Use this to create distribution plots or to dynamically tune your thresholds.
+
+```python
+all_scores = db.get_scores_from_centroid()
+# Sort to find the most "normal" or most "unique" items
 ```
 
 ## 🛠 Model Preparation
@@ -168,21 +207,21 @@ for _ in range(1000):
     results = db.search_raw(query_vec, k=5)
 ```
 
-### 3. `ingest_raw(vector: List[float], text: str)`
-Injects a pre-computed vector directly into the buffer. This is useful if you are migrating data from another DB or using an external embedding service.
+### 3. `ingest_raw(vector: List[float], text: str) -> float`
+Injects a pre-computed vector directly into the buffer. Returns the instant anomaly score.
 
 ```python
 vector = [0.1, 0.2, 0.3, ...] # Must match model dimension
-db.ingest_raw(vector, "My metadata text")
+score = db.ingest_raw(vector, "My metadata text")
 ```
 
-### 4. `ingest_batch_raw(vectors: List[List[float]], texts: List[str])`
-High-speed batch ingestion of raw vectors. Bypasses Python loop overhead by processing the entire batch in Rust.
+### 4. `ingest_batch_raw(vectors: List[List[float]], texts: List[str]) -> List[float]`
+High-speed batch ingestion of raw vectors. Bypasses Python loop overhead by processing the entire batch in Rust. Returns a list of instant anomaly scores.
 
 ```python
 vectors = [[...], [...], [...]]
 texts = ["text 1", "text 2", "text 3"]
-db.ingest_batch_raw(vectors, texts)
+scores = db.ingest_batch_raw(vectors, texts)
 ```
 
 ---

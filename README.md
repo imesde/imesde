@@ -22,6 +22,8 @@ Traditional vector databases are built for persistence and long-term storage. im
 
 - **Real-Time RAG Engine**: Enables the [**"Infinite Window"**](docs/rag_engine.md). Feed LLMs with live context (logs, tickers, chats) with zero indexing latency and automatic "forgetting" of stale data.
 
+- **O(1) Instant Anomaly Detection**: Built-in support for **Sliding Window Centroids**. Automatically detect "unseen" anomalies during ingestion by measuring semantic distance from the mathematical mean in real-time.
+
 - **Local-First Privacy**: In-process vectorization (ONNX) and storage. Data never leaves your machine.
 
 ---
@@ -31,6 +33,7 @@ Traditional vector databases are built for persistence and long-term storage. im
 | Use Case | imesde | Traditional Vector DB |
 | :--- | :--- | :--- |
 | **Live Firehose (Logs/Tweets)** | ✅ **Best** (Circular Buffer) | ❌ Slow (Disk/Indexing lag) |
+| **Anomaly Detection (Outliers)**| ✅ **Best** (Centroid-based) | ❌ Hard (Batch processing) |
 | **Real-Time RAG (Live Context)** | ✅ **Best** (Zero lag) | ❌ Hard (Stale data/Indexing) |
 | **Search 10M PDF Documents** | ❌ No (RAM limited) | ✅ **Best** (Disk/HNSW) |
 | **Privacy-First / Edge** | ✅ **Best** (Zero-deps) | ❌ Hard (Heavy services) |
@@ -49,6 +52,8 @@ Traditional vector databases are built for persistence and long-term storage. im
 |---|---|
 |Avg Search Latency|211.32 μs|
 |P99 Search Latency|302.50 μs|
+|Instant Centroid Update|< 3.00 μs (O(1))|
+|Avg Outlier Detection|213.93 μs|
 |Engine Throughput|4,732 queries/sec|
 |Avg Embedding Time|1.77 ms|
 |Total QPS|734 queries/sec|
@@ -134,20 +139,25 @@ pip install imesde
 ```python
 from imesde import PyImesde
 
-# Initialize with model paths
-engine = PyImesde("model/model.onnx", "model/tokenizer.json")
+# Initialize with O(1) centroid tracking enabled
+engine = PyImesde("model/model.onnx", "model/tokenizer.json", track_centroid=True)
 
-# Single ingestion
-engine.ingest("Real-time log data flow")
+# Single ingestion returns an instant anomaly score (similarity to mean)
+score = engine.ingest("Real-time log data flow")
+if score < 0.45:
+    print(f"🚨 Instant anomaly detected: {score}")
 
 # High-performance batch ingestion (Parallelized)
 logs = ["User login at 10:00", "DB Query took 500ms", "Connection reset"]
-engine.ingest_batch(logs)
+scores = engine.ingest_batch(logs)
 
 # Search the circular buffer
 results = engine.search("database issues", k=5)
 for text, score in results:
     print(f"[{score:.4f}] {text}")
+
+# Get the mathematical mean (O(1) retrieval)
+centroid = engine.get_centroid()
 ```
 
 > *Note: imesde requires an ONNX model and its tokenizer. You can export these from Hugging Face using `optimum-cli` or `sentence-transformers`. Place them in the `model/` directory as `model.onnx` and `tokenizer.json`.*

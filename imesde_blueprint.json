@@ -10,11 +10,12 @@
     },
     "chat_context_evolution": {
         "hardware_profile": "Optimized for Apple Silicon M4 (Unified Memory architecture).",
-        "performance_milestones": "Achieved <400μs P99 search latency on 5k records with int8 quantization.",
+        "performance_milestones": "Achieved <400μs P99 search latency on 5k records with int8 quantization. Added O(1) sliding window centroid anomaly detection.",
         "technical_pivots": [
             "Adopted bge-small-en-v1.5 int8 as reference model for extreme CPU efficiency.",
             "Established CPU-First philosophy to eliminate PCIe bus latency 'tax'.",
-            "Resolved OpenSSL-sys compilation errors for CI/CD pipelines via libssl-dev/vendored features."
+            "Resolved OpenSSL-sys compilation errors for CI/CD pipelines via libssl-dev/vendored features.",
+            "Implemented O(1) Incremental Centroid update for instant anomaly detection during ingestion."
         ],
         "application_focus": "Transitioned towards high-frequency stream monitoring (Wikipedia Firehose, Financial Bot)."
     },
@@ -26,11 +27,11 @@
     },
     "technical_specifications": {
         "language": "Rust",
-        "data_structure": "Sharded Circular Vector Buffer (Ring Buffer)",
+        "data_structure": "Sharded Circular Vector Buffer with O(1) Moving Centroid",
         "search_algorithm": "SIMD-accelerated exhaustive linear scan (K-Nearest Neighbors)",
         "embedding_strategy": "In-process vectorization via ONNX Runtime (e.g., BGE-Micro)",
         "concurrency": "Lock-free or sharded RwLock for high-throughput ingestion",
-        "target_performance": "10,000+ vector ingestions per second on standard CPU"
+        "target_performance": "10,000+ vector ingestions per second with instant anomaly scoring"
     },
     "problems_solved": [
         "Contextual lag: traditional vector DBs are too slow to update for real-time streams.",

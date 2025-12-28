@@ -17,6 +17,11 @@ The moment a packet arrives or a log line is generated, it is embedded and avail
 ### 3. Instant Forgetting
 One of the biggest challenges in RAG is dealing with outdated information that leads to hallucinations. Because `imesde` uses a circular buffer, old data naturally flows out. This ensures your LLM stays focused on the most relevant, current information without being "polluted" by stale state.
 
+### 4. Dynamic Baseline (Centroid)
+`imesde` allows your RAG system to understand not just individual records, but the **overall tone** of the stream. By calculating the **Centroid** (mathematical mean), your LLM can detect when the entire stream is shifting (e.g., "The overall sentiment of the news has turned bearish in the last 10 minutes").
+
+> **Note**: This requires `track_centroid=True` during initialization.
+
 ## 🛠 Example Use Case: Market Analysis
 
 Imagine an AI agent monitoring multiple financial news feeds. 
