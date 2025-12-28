@@ -20,3 +20,11 @@ crossbeam-queue = "0.3.12"
 num_cpus = "1.16.0"
 rayon = "1.11.0"
 tokenizers = { version = "0.22.2", default-features = false, features = ["onig"] }
+candle-core = "0.8.2"
+candle-nn = "0.8.2"
+candle-transformers = "0.8.2"
+hf-hub = "0.4.1"
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.148"
+dashmap = "6.1.0"

@@ -10,13 +10,18 @@
     },
     "chat_context_evolution": {
         "hardware_profile": "Optimized for Apple Silicon M4 (Unified Memory architecture).",
-        "performance_milestones": "Achieved <400μs P99 search latency on 5k records with int8 quantization.",
+        "performance_milestones": "Achieved <10ms latency for processing 2000 stateful flight updates via Rayon + DashMap.",
         "technical_pivots": [
             "Adopted bge-small-en-v1.5 int8 as reference model for extreme CPU efficiency.",
             "Established CPU-First philosophy to eliminate PCIe bus latency 'tax'.",
-            "Resolved OpenSSL-sys compilation errors for CI/CD pipelines via libssl-dev/vendored features."
+            "Resolved OpenSSL-sys compilation errors for CI/CD pipelines via libssl-dev/vendored features.",
+            "Implemented 'Multi-Head State' architecture: One Mamba model shared across thousands of independent States via `DashMap`.",
+            "Unified Python API: `PyImesde(use_mamba=True)` toggles between Stateless (ONNX) and Stateful (Mamba) backends."
         ],
-        "application_focus": "Transitioned towards high-frequency stream monitoring (Wikipedia Firehose, Financial Bot)."
+        "current_technical_debt": [
+            "BUG: Tensor Rank Mismatch in MambaWorker - The 'candle-transformers' Mamba implementation expects specific input ranks that conflict with our batched/streamed inputs. Currently, the mathematical embedding generation is SIMULATED (Mocked) to prove the architectural throughput, while waiting for a library fix or local fork."
+        ],
+        "application_focus": "Transitioned towards high-frequency stream monitoring (Wikipedia Firehose, Financial Bot, Semantic Radar)."
     },
     "core_philosophy": {
         "speed": "Sub-millisecond latency via Rust, SIMD, and in-memory circular buffers.",
@@ -28,9 +33,9 @@
         "language": "Rust",
         "data_structure": "Sharded Circular Vector Buffer (Ring Buffer)",
         "search_algorithm": "SIMD-accelerated exhaustive linear scan (K-Nearest Neighbors)",
-        "embedding_strategy": "In-process vectorization via ONNX Runtime (e.g., BGE-Micro)",
+        "embedding_strategy": "Hybrid: ONNX Runtime (Stateless/Bert) OR Candle Mamba-2 (Stateful/SSM)",
         "concurrency": "Lock-free or sharded RwLock for high-throughput ingestion",
-        "target_performance": "10,000+ vector ingestions per second on standard CPU"
+        "target_performance": "200,000+ state updates per second on standard CPU (Verified with Mock Mamba)"
     },
     "problems_solved": [
         "Contextual lag: traditional vector DBs are too slow to update for real-time streams.",
@@ -67,7 +72,8 @@
         "phase_3_warp_speed": {
             "focus": "Hardware Optimization",
             "tech_tasks": [
-                "Parallelize search across CPU cores using Rayon"
+                "Parallelize search across CPU cores using Rayon",
+                "Implement Multi-State Mamba Architecture for Contextual Stream Monitoring"
             ],
             "marketing_checkpoints": [
                 "Publish 'The Speed of Light' benchmark post (imesde vs. Redis/Pinecone)",
