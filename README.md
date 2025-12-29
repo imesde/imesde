@@ -16,9 +16,7 @@ Welcome to **imesde**, the **In-Memory Streaming Data Engine**. We are defining 
 
 Traditional vector databases are built for persistence and long-term storage. imesde is built for **speed and ephemerality**:
 
-- **Zero-Disk Dependency**: Pure RAM operation. Old data flows out as new data flows in. No GC, no fragmentation. m
-
-- **Lock-Free Architecture**: High-throughput ingestion and search using sharded buffers.
+- **Zero-Disk Dependency**: Pure RAM operation. Old data flows out as new data flows in. No GC, no fragmentation.
 
 - **Real-Time RAG Engine**: Enables the [**"Infinite Window"**](docs/rag_engine.md). Feed LLMs with live context (logs, tickers, chats) with zero indexing latency and automatic "forgetting" of stale data.
 
