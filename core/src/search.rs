@@ -143,10 +143,6 @@ pub fn dot_product(v1: &[f32], v2: &[f32]) -> f32 {
     dot_product_scalar(v1, v2)
 }
 
-fn dot_product_scalar(v1: &[f32], v2: &[f32]) -> f32 {
-    v1.iter().zip(v2).map(|(a, b)| a * b).sum()
-}
-
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn dot_product_avx2(v1: &[f32], v2: &[f32]) -> f32 {
