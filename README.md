@@ -48,13 +48,13 @@ Traditional vector databases are built for persistence and long-term storage. im
 
 |Metric	|Result|
 |---|---|
-|Avg Search Latency|148.12 μs|
-|P99 Search Latency|248.45 μs|
+|Avg Search Latency|141.92 μs|
+|P99 Search Latency|218.87 μs|
 |Instant Centroid Update|< 3.00 μs (O(1))|
-|Avg Outlier Detection|156.17 μs|
+|Avg Outlier Detection|153.02 μs|
 |Engine Throughput|6,751 queries/sec|
 |Avg Embedding Time|1.75 ms|
-|Total QPS|738 queries/sec|
+|Total QPS|801 queries/sec|
 
 ### 🏆 imesde vs Qdrant (Pure Engine)
 
