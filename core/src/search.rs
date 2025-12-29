@@ -125,14 +125,88 @@ pub fn dot_product(v1: &[f32], v2: &[f32]) -> f32 {
         return 0.0;
     }
 
-    // Manual unrolling/hinting often helps the compiler verify purely safe access
-    // isn't bound-checked inside the hot loop.
-    let mut sum = 0.0;
-    for i in 0..len {
-        // SAFETY: We checked lengths are equal.
-        // Using get_unchecked would be unsafe but faster. 
-        // For now, simple indexing allows auto-vectorization if compiled with -C target-cpu=native
-        sum += v1[i] * v2[i];
+    #[cfg(target_arch = "x86_64")]
+    {
+        if is_x86_feature_detected!("avx2") {
+            // SAFETY: We checked that AVX2 is available.
+            return unsafe { dot_product_avx2(v1, v2) };
+        }
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    {
+        // SAFETY: NEON is standard on aarch64.
+        return unsafe { dot_product_neon(v1, v2) };
+    }
+
+    #[cfg(not(target_arch = "aarch64"))]
+    dot_product_scalar(v1, v2)
+}
+
+fn dot_product_scalar(v1: &[f32], v2: &[f32]) -> f32 {
+    v1.iter().zip(v2).map(|(a, b)| a * b).sum()
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn dot_product_avx2(v1: &[f32], v2: &[f32]) -> f32 {
+    use std::arch::x86_64::*;
+    let len = v1.len();
+    let mut sum_vec = unsafe { _mm256_setzero_ps() };
+    
+    let mut i = 0;
+    // Process 8 floats at a time
+    while i + 8 <= len {
+        unsafe {
+            let a = _mm256_loadu_ps(v1.as_ptr().add(i));
+            let b = _mm256_loadu_ps(v2.as_ptr().add(i));
+            sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(a, b));
+        }
+        i += 8;
+    }
+    
+    // Horizontal sum
+    let sum128 = unsafe { _mm_add_ps(_mm256_castps256_ps128(sum_vec), _mm256_extractf128_ps(sum_vec, 1)) };
+    let mut buf = [0.0; 4];
+    unsafe { _mm_storeu_ps(buf.as_mut_ptr(), sum128) };
+    let mut sum = buf.iter().sum::<f32>();
+
+    // Handle remaining elements
+    while i < len {
+        unsafe {
+            sum += *v1.get_unchecked(i) * *v2.get_unchecked(i);
+        }
+        i += 1;
+    }
+    sum
+}
+
+#[cfg(target_arch = "aarch64")]
+unsafe fn dot_product_neon(v1: &[f32], v2: &[f32]) -> f32 {
+    use std::arch::aarch64::*;
+    let len = v1.len();
+    let mut sum_vec = unsafe { vdupq_n_f32(0.0) };
+    
+    let mut i = 0;
+    // Process 4 floats at a time
+    while i + 4 <= len {
+        unsafe {
+            let a = vld1q_f32(v1.as_ptr().add(i));
+            let b = vld1q_f32(v2.as_ptr().add(i));
+            sum_vec = vfmaq_f32(sum_vec, a, b);
+        }
+        i += 4;
+    }
+    
+    // Sum across the vector
+    let mut sum = unsafe { vaddvq_f32(sum_vec) };
+    
+    // Handle remaining elements
+    while i < len {
+        unsafe {
+            sum += *v1.get_unchecked(i) * *v2.get_unchecked(i);
+        }
+        i += 1;
     }
     sum
 }
